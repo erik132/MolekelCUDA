@@ -1,0 +1,8 @@
+count from start: 0.000000  starting AddOrbitalSurface function
+count from start: 0.000000  getting orbital
+count from start: 0.000000  save and reset transform done
+count from start: 0.000000  the three actors created
+count from start: 25.000000  MO mgrid data created
+count from start: 25.000000  bothsigns and nodalSurface passed
+count from start: 25.000000  typemasks and actors pased
+count from start: 25.000000  shaders and surface maps passed

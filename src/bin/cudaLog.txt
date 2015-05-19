@@ -1,0 +1,2 @@
+count from start: 0.000000  cuda activated
+count from start: 0.000000  cuda result was 256

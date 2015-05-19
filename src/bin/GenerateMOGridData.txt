@@ -1,0 +1,4 @@
+count from start: 0.000000  starting function
+count from start: 0.000000  orbital received
+count from start: 0.000000  bounding box and floats received
+count from start: 25.000000  vtk process calculated

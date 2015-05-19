@@ -1,0 +1,52 @@
+8
+
+dir
+10
+svn+ssh://ugovare@micrograil.net/home/ugovare/svn/openbabel/trunk/include/openbabel/math
+svn+ssh://ugovare@micrograil.net/home/ugovare/svn/openbabel
+
+
+
+2008-01-06T15:59:45.344541Z
+1
+ugovare
+
+
+svn:special svn:externals svn:needs-lock
+
+
+
+
+
+
+
+
+
+
+
+43a24535-ff9f-4a27-b32f-593f0b182cde
+
+matrix3x3.h
+file
+
+
+
+
+2008-07-24T14:40:52.000000Z
+caa61fa101c6f802d4b2fdbe73855bba
+2008-01-06T15:59:45.344541Z
+1
+ugovare
+
+vector3.h
+file
+
+
+
+
+2008-07-24T14:40:52.000000Z
+3687d8b0da6482c1d853885cc97cb990
+2008-01-06T15:59:45.344541Z
+1
+ugovare
+

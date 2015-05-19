@@ -1,0 +1,7 @@
+count from start: 0.000000  program started
+count from start: 0.000000  generate pressed
+count from start: 0.000000  stopped processing
+count from start: 0.000000  progress called back
+count from start: 0.000000  we are not using density
+count from start: 0.000000  orbital surfaces removed
+count from start: 0.000000  ow getData received
