@@ -83,7 +83,9 @@
 
 //debugInclude
 #include "../ESLogger.h"
-#include "../TestKernel.h"
+
+#include "../cudaCodes/CalcDensCudaService.h"
+#include "../cudaCodes/CalcDensDataPack.h"
 
 ////////////////////////////////////////////////
 extern void logprint( const char* );
@@ -266,8 +268,31 @@ vtkImageData* vtk_process_calc( Mol *mol,
   float x, y, z, dx, dy, dz;
   short i, j, k;
   int len, ncub[3];
+  CalcDensDataPack dataPack;
+  CalcDensCudaService cudaService;
 
   type = -1;
+  esl.logMessage("starting controller test");
+  
+  if(mol==NULL){
+	  esl.logMessage("Molecule was null");
+  }else{
+	  esl.logMessage("Molecule was not null");
+  }
+  
+
+  dataPack.mol=mol;
+  dataPack.dim=dim;
+  dataPack.ncubes=ncubes;
+  dataPack.key=key;
+	
+  if(dataPack.mol==NULL){
+	  esl.logMessage("datapack molecule is NULL");
+  }else{
+	  esl.logMessage("datapack is not null");
+  }
+
+
 
   double (*funct)(Mol *mol, float x, float y, float z);
 
@@ -297,13 +322,20 @@ vtkImageData* vtk_process_calc( Mol *mol,
 		  return 0;
 	  }
   } // if( key != MEP )
+
+  if(cudaService.vtkProcessCalc(&dataPack)==NULL){
+	  esl.logMessage("controller tested");
+  }else{
+	  esl.logMessage("controller did not return null");
+  }
   esl.logMessage("alhpaorbitals set");
   switch(key) {
    case CALC_ORB  :
     switch(mol->alphaOrbital[0].flag) {
       case GAMESS_ORB :
       case HONDO_ORB  :
-      case GAUSS_ORB  : funct = calc_point; break;
+	  case GAUSS_ORB  : esl.logMessage("function calc_point activated"); 
+		  funct = calc_point; break;
   /* to be fixed
           case ADF_ORB_A  :
   case ADF_ORB_B  : funct = calc_adf_point; break;
@@ -312,8 +344,10 @@ vtkImageData* vtk_process_calc( Mol *mol,
   */
       case MOS_ORB   :
       case ZINDO_ORB  :
-      case PRDDO_ORB  : funct = calc_prddo_point; break;
-      case MLD_SLATER_ORB  : funct = calc_sltr_point; break;
+	  case PRDDO_ORB  : esl.logMessage("function calc_prddo_point activated");
+		  funct = calc_prddo_point; break;
+	  case MLD_SLATER_ORB  : esl.logMessage("function calc_sltr_point activated");
+		  funct = calc_sltr_point; break;
     }
     break;
 
@@ -329,6 +363,7 @@ vtkImageData* vtk_process_calc( Mol *mol,
        }
        else {
         printf("density matrix generated...\n");
+		esl.logMessage("function calculate_density activated");
         funct = calculate_density;
        }
        break;
@@ -361,6 +396,7 @@ vtkImageData* vtk_process_calc( Mol *mol,
        }
        else {
         printf("density matrix generated...\n");
+		esl.logMessage("function calculate_density activated");
         funct = calculate_density;
        }
        break;
@@ -388,8 +424,8 @@ vtkImageData* vtk_process_calc( Mol *mol,
   len = 4*ncub[0]*ncub[1];
 	
 	char buffer[1000];
-	sprintf(buffer, "image data: ncub0 %d, ncub1 %d, ncub2 %d, dim0 %f, dim2 %f, dim4 %f, dx %f, dy %f, dz %f", 
-		ncub[0], ncub[1], ncub[2], dim[0], dim[2], dim[4], dx, dy,dz);
+	sprintf(buffer, "image data: ncub0 %d, ncub1 %d, ncub2 %d, dim0 %f, dim2 %f, dim4 %f, dx %f, dy %f, dz %f, nBasis Functions %d", 
+		ncub[0], ncub[1], ncub[2], dim[0], dim[2], dim[4], dx, dy,dz, mol->nBasisFunctions);
 	esl.logMessage(buffer);
   vtkSmartPointer< vtkImageData > image( vtkImageData::New() );
   image->SetDimensions( ncub[ 0 ], ncub[ 1 ], ncub[ 2 ] );
@@ -398,7 +434,8 @@ vtkImageData* vtk_process_calc( Mol *mol,
                     dim[4] );
   image->SetSpacing( dx, dy, dz );
 	esl.logMessage("image initialized");
-	activateCuda();
+	//activateCuda();
+	esl.logMessage("Cuda finished");
   const int totalSteps = ncub[ 0 ] * ncub[ 1 ] * ncub[ 2 ];
   if( progressCBack ) progressCBack( 0, totalSteps, cbackData );
   for (i=0, z=dim[4]; i<ncub[2]; i++, z += dz) {
