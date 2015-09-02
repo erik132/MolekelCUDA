@@ -5,9 +5,9 @@ vtkImageData* CalcDensCudaFunction::initImageData(){
 
 	vtkSmartPointer< vtkImageData > image( vtkImageData::New() );
 
-	image->SetDimensions( ncub[0], ncub[1], ncub[2] );
-	image->SetOrigin( calcData->dim[0],calcData->dim[2],calcData->dim[4] );
-	image->SetSpacing( dx, dy, dz );
+	image->SetDimensions( calcData.ncub0, calcData.ncub1, calcData.ncub2 );
+	image->SetOrigin( calcData.dim0,calcData.dim2,calcData.dim4 );
+	image->SetSpacing( calcData.dx, calcData.dy, calcData.dz );
 
 	return image;
 }
@@ -18,29 +18,28 @@ CalcDensCudaFunction::CalcDensCudaFunction(CalcDensDataPack *data){
 	esl.logMessage("function started");
 	
 
-	ncub[0] = *data->ncubes++;
-	ncub[1] = *data->ncubes++;
-	ncub[2] = *data->ncubes++;
+	calcData.ncub0 = *data->ncubes++;
+	calcData.ncub1 = *data->ncubes++;
+	calcData.ncub2 = *data->ncubes++;
 
-	dx = (data->dim[1]-data->dim[0])/(ncub[0]-1);
-	dy = (data->dim[3]-data->dim[2])/(ncub[1]-1);
-	dz = (data->dim[5]-data->dim[4])/(ncub[2]-1);
+	calcData.dim0 = data->dim[0];
+	calcData.dim2 = data->dim[2];
+	calcData.dim4 = data->dim[4];
+
+	calcData.dx = (data->dim[1] - data->dim[0]) / (calcData.ncub0 - 1);
+	calcData.dy = (data->dim[3] - data->dim[2]) / (calcData.ncub1 - 1);
+	calcData.dz = (data->dim[5] - data->dim[4]) / (calcData.ncub2 - 1);
 	
 	cudaMolecule.setProperties(data->mol);
-
-	calcData = data;
+	cudaOrbital.setProperties(data->orbital,data->mol);
 
 	
 
-	if(CalcDensCudaFunction::calcData->mol == NULL){
-		esl.logMessage("data pack molecule is NULL");
+	if(data->orbital == NULL){
+		esl.logMessage("data pack molecularOrbital is NULL");
 	}else{
-		esl.logMessage("data pac molecule is not NULL");
+		esl.logMessage("data pac molecularOrbital is not NULL");
 	}
-}
-
-CalcDensDataPack *CalcDensCudaFunction::getDataPack(){
-	return calcData;
 }
 
 
@@ -48,6 +47,13 @@ CalcDensDataPack *CalcDensCudaFunction::getDataPack(){
 cudaError_t CalcDensCudaFunction::moleculeToDevice(){
 	
 	cudaError_t status;
+
+	status = cpyOrbital();
+
+	if(status != cudaSuccess){
+		return status;
+	}
+
 
 	status = cudaMolecule.cpyInternalPointers();
 
@@ -69,5 +75,24 @@ void CalcDensCudaFunction::deleteDeviceData(){
 
 	cudaMolecule.clearCudaData();
 	cudaFree(deviceMolecule);
+	cudaOrbital.clearCudaData();
+	cudaFree(deviceOrbital);
 
+}
+
+cudaError_t CalcDensCudaFunction::cpyOrbital(){
+
+	cudaError_t status = cudaOrbital.cpyInternalPointers();
+	if(status != cudaSuccess){
+		return status;
+	}
+
+	status = cudaMalloc(&deviceOrbital, sizeof(CudaMolecularOrbital));
+
+	if(status != cudaSuccess){
+		return status;
+	}
+	status = cudaMemcpy(deviceOrbital, &cudaOrbital, sizeof(CudaMolecularOrbital),cudaMemcpyHostToDevice);
+
+	return status;
 }

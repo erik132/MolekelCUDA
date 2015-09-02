@@ -2,25 +2,36 @@
 
 #include "molekelHelpFunctions/CalcChi.cu"
 
-__global__ void calcPoint(CudaMolecule *molecule, float dx, float dy, float dz, CalcDensInternalData specialData){
-
+__global__ void calcPoint(CudaMolecule *molecule, CalcDensInternalData internal, MolecularOrbital *orbital){
 
 	extern __shared__ double chi[];
 	int indexZ = threadIdx.z + blockDim.z*BLOCK_DIM;
 	int	indexY = threadIdx.y + blockDim.y*BLOCK_DIM;
 	int	indexX = threadIdx.x + blockDim.x*BLOCK_DIM;
 	float x,y,z;
+	double *memLocation;
+	const int memNr = threadIdx.x + (threadIdx.y*BLOCK_DIM) + (threadIdx.z*BLOCK_DIM*BLOCK_DIM);
+	const int basisFunctions = molecule->nBasisFunctions;
+	int i, value=0;
 
 
-	if(indexX < specialData.ncub0 && indexY < specialData.ncub1 && indexZ < specialData.ncub2){
-		x = specialData.dim0 + indexX*specialData.dx;
-		y = specialData.dim2 + indexY*specialData.dy;
-		z = specialData.dim3 + indexZ*specialData.dz;
+	if(indexX < internal.ncub0 && indexY < internal.ncub1 && indexZ < internal.ncub2){
+		memLocation = chi + (memNr*molecule->nBasisFunctions);
 
-		calcChi(chi, molecule, x, y, z);
+		x = internal.dim0 + indexX*internal.dx;
+		y = internal.dim2 + indexY*internal.dy;
+		z = internal.dim3 + indexZ*internal.dz;
+
+		for(i = 0; i<molecule->nBasisFunctions; i++){
+			memLocation[i] = 0;
+		}
+
+		calcChi(memLocation, molecule, x, y, z);
+
+		for(i=0; i<basisFunctions; i++){
+			value += memLocation[i] + orbital[i];
+		}
 	}
-	
-	
 	
 }
 
@@ -38,14 +49,14 @@ vtkImageData* CalcDensCalcPoint::calcImageData(){
 		esl.logMessage("mol pointer was not null");
 	}
 
-	dim3 blockSize(5,5,5);
-	int memSize = 5*5*5*sizeof(double)*cudaMolecule.nBasisFunctions;
+	dim3 blockSize(BLOCK_DIM,BLOCK_DIM,BLOCK_DIM);
+	int memSize = BLOCK_DIM*BLOCK_DIM*BLOCK_DIM*sizeof(double)*cudaMolecule.nBasisFunctions;
 	dim3 gridSize(1);
 
 	
 	status = CalcDensCalcPoint::moleculeToDevice();
 
-	calcPoint<<<gridSize, blockSize, memSize>>>(deviceMolecule, dx, dy, dz);
+	calcPoint<<<gridSize, blockSize, memSize>>>(deviceMolecule, internal, deviceOrbital);
 	
 	if(status == cudaSuccess){
 		esl.logMessage("molecule copied with success");

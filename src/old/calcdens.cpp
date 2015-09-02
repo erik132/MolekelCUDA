@@ -285,6 +285,7 @@ vtkImageData* vtk_process_calc( Mol *mol,
   dataPack.dim=dim;
   dataPack.ncubes=ncubes;
   dataPack.key=key;
+  dataPack.orbital=molOrb;
 	
   if(dataPack.mol==NULL){
 	  esl.logMessage("datapack molecule is NULL");

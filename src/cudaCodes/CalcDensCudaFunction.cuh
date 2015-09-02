@@ -15,18 +15,22 @@
 #define BLOCK_DIM 5
 
 class CalcDensCudaFunction{
+private:
+	cudaError_t cpyOrbital();
+
+
 protected:
 	vtkImageData* initImageData();
-	int ncub[3];
-	float x, y, z, dx, dy, dz;
-	CalcDensDataPack *calcData;
+	CalcDensInternalData calcData;
 	CudaMolecule cudaMolecule;
 	CudaMolecule *deviceMolecule;
+	CudaMolecularOrbital cudaOrbital;
+	CudaMolecularOrbital *deviceOrbital;
+
 
 public:
 	virtual vtkImageData* calcImageData() = 0;
 	CalcDensCudaFunction(CalcDensDataPack *data);
-	CalcDensDataPack *getDataPack();
 
 	cudaError_t moleculeToDevice();
 	void deleteDeviceData();
