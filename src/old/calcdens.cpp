@@ -443,6 +443,10 @@ vtkImageData* vtk_process_calc( Mol *mol,
    for (j=0, y=dim[2]; j<ncub[1]; j++, y += dy) {
 	for (k=0, x=dim[0]; k<ncub[0]; k++, x += dx) {
       const double s = (*funct)(mol, x, y, z);
+	  if(i < 5 && j <5 && k<5){
+		sprintf(buffer, "x: %d y: %d z: %d value is %.15f", k, j, i, s);
+		esl.logMessage(buffer);
+	  }
       if( s < minValue ) minValue = s;
       if( s > maxValue ) maxValue = s;
       image->SetScalarComponentFromDouble( k, j, i, 0, s );

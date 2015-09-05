@@ -99,11 +99,11 @@ vtkImageData* CalcDensCudaController::vtkProcessCalc(CalcDensDataPack *data){
 		break;
 	  }
 
-	if(calcFunction->getDataPack()->mol == NULL){
+	/*if(calcFunction->getDataPack()->mol == NULL){
 		esl.logMessage("data pack molecule was NULL");
 	}else{
 		esl.logMessage("data pac molecule was NOT NULL");
-	}
+	}*/
 	return calcFunction->calcImageData();
 }
 

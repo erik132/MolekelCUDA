@@ -10,6 +10,8 @@
 
 #include "CalcDensDataPack.h"
 #include "particleCudaVersions/CudaMolecule.cuh"
+#include "particleCudaVersions/CudaMolecularOrbital.cuh"
+#include "CalcDensInternalData.h"
 #include "../ESLogger.h"
 
 #define BLOCK_DIM 5

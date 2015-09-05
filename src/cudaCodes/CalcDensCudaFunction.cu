@@ -61,7 +61,7 @@ cudaError_t CalcDensCudaFunction::moleculeToDevice(){
 		return status;
 	}
 
-	status = cudaMalloc(&deviceMolecule, sizeof(CudaMolecule));
+	status = cudaMalloc((void**)&deviceMolecule, sizeof(CudaMolecule));
 
 	if(status!=cudaSuccess){
 		return status;
@@ -87,7 +87,7 @@ cudaError_t CalcDensCudaFunction::cpyOrbital(){
 		return status;
 	}
 
-	status = cudaMalloc(&deviceOrbital, sizeof(CudaMolecularOrbital));
+	status = cudaMalloc((void**)&deviceOrbital, sizeof(CudaMolecularOrbital));
 
 	if(status != cudaSuccess){
 		return status;
