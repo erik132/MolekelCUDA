@@ -16,7 +16,7 @@ CalcDensCudaFunction::CalcDensCudaFunction(CalcDensDataPack *data){
 	
 	ESLogger esl("CalcDensCudaFunction.txt");
 	esl.logMessage("function started");
-	
+	BLOCK_DIM = 5;
 
 	calcData.ncub0 = *data->ncubes++;
 	calcData.ncub1 = *data->ncubes++;
@@ -95,4 +95,33 @@ cudaError_t CalcDensCudaFunction::cpyOrbital(){
 	status = cudaMemcpy(deviceOrbital, &cudaOrbital, sizeof(CudaMolecularOrbital),cudaMemcpyHostToDevice);
 
 	return status;
+}
+
+dim3 CalcDensCudaFunction::getGridSize(){
+	
+	int x,y,z; //size nr for each direction
+	char buffer[1000];
+	ESLogger esl("getGridSize.txt");
+	
+	x= getSingleGridSize(calcData.ncub0, BLOCK_DIM);
+	y= getSingleGridSize(calcData.ncub1, BLOCK_DIM);
+	z= getSingleGridSize(calcData.ncub2, BLOCK_DIM);
+
+	sprintf(buffer, "grids will be: x: %d y: %d z: %d", x, y, z);
+	esl.logMessage(buffer);
+
+	dim3 gridSize(x,y,z);
+	return gridSize;
+
+}
+
+int CalcDensCudaFunction::getSingleGridSize(int elements, int blockSize){
+	int result;
+
+	result = elements/blockSize;
+	if(result*blockSize < elements){
+		result++;
+	}
+
+	return result;
 }

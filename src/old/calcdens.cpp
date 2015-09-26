@@ -223,7 +223,7 @@ double *chi;
 MolecularOrbital *molOrb;
 char timestring[300];
 
-
+bool comparisonMoment = false;
 //-----------------------------------------------------------------------------
 /// Set this variable to false from a separate thread to stop computation.
 static bool stop = false;
@@ -267,7 +267,7 @@ vtkImageData* vtk_process_calc( Mol *mol,
   stop = false;
   float x, y, z, dx, dy, dz;
   short i, j, k;
-  int len, ncub[3];
+  int len, ncub[3], resultCounter = 0;;
   CalcDensDataPack dataPack;
   CalcDensCudaService cudaService;
 
@@ -442,21 +442,29 @@ vtkImageData* vtk_process_calc( Mol *mol,
   for (i=0, z=dim[4]; i<ncub[2]; i++, z += dz) {
    for (j=0, y=dim[2]; j<ncub[1]; j++, y += dy) {
 	for (k=0, x=dim[0]; k<ncub[0]; k++, x += dx) {
+		if(i==0 && j==0 && k==0){
+			comparisonMoment = true;
+		}else{
+			comparisonMoment = false;
+		}
       const double s = (*funct)(mol, x, y, z);
-	  if(i < 5 && j <5 && k<5){
+	  /*if(i < 5 && j <5 && k<5){
 		sprintf(buffer, "x: %d y: %d z: %d value is %.15f", k, j, i, s);
 		esl.logMessage(buffer);
-	  }
+	  }*/
+	  sprintf(buffer, "nr: %d value is %.15f", resultCounter, s);
+		esl.logMessage(buffer);
+	resultCounter++;
       if( s < minValue ) minValue = s;
       if( s > maxValue ) maxValue = s;
       image->SetScalarComponentFromDouble( k, j, i, 0, s );
       if( stop == true ) goto stopped; // forward jump to stopped label
     }
    }
- esl.logMessage("nested loop execution ended without stop");
+ //esl.logMessage("nested loop execution ended without stop");
 // Execution will jump to this label iff stop requested   
 stopped: 
-	esl.logMessage("nested loop execution ended with stop");
+	//esl.logMessage("nested loop execution ended with stop");
    const int idx = ncub[ 0 ] * ncub[ 1 ] * ( i + 1 );
    // invoke progress callback function.
    if( progressCBack ) progressCBack( idx, totalSteps, cbackData );
@@ -665,15 +673,21 @@ double calc_point(Mol *mol, float x, float y, float z)
 {
    register int i;
    double value, *ao_coeff;
+   char buffer[1000];
    ESLogger esl("calcdens-calc_point.txt");
-   esl.logMessage("function activated");
+   //esl.logMessage("function activated");
 
    ao_coeff = molOrb->coefficient;
    calc_chi(mol, x, y, z);
+   
 
    value = 0;
    for(i=0; i<mol->nBasisFunctions; i++) {
       value += ao_coeff[i]*chi[i];
+	  if(comparisonMoment == true){
+		  sprintf(buffer, "chi nr %d value is %.15f", i, chi[i]);
+		  esl.logMessage(buffer);
+	  }
    }
 
    return value;

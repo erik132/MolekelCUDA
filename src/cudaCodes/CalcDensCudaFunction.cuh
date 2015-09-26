@@ -14,20 +14,29 @@
 #include "CalcDensInternalData.h"
 #include "../ESLogger.h"
 
-#define BLOCK_DIM 5
+//#define BLOCK_DIM 5
 
 class CalcDensCudaFunction{
 private:
+	//variables
 	cudaError_t cpyOrbital();
 
+	//methods
+	int getSingleGridSize(int elements, int blockSize);
 
 protected:
+	//variables
 	vtkImageData* initImageData();
 	CalcDensInternalData calcData;
 	CudaMolecule cudaMolecule;
 	CudaMolecule *deviceMolecule;
 	CudaMolecularOrbital cudaOrbital;
 	CudaMolecularOrbital *deviceOrbital;
+	int BLOCK_DIM;
+	
+	//methods
+	dim3 getGridSize();
+	
 
 
 public:
