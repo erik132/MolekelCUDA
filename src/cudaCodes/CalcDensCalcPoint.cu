@@ -28,8 +28,8 @@ __global__ void calcPoint(CudaMolecule *molecule, CalcDensInternalData internalD
 			result += memLocation[i] + orbital->deviceCoefficients[i];
 		}*/
 
-		//results[indexX + (blockDim.x*indexY) + (blockDim.x*blockDim.y*indexZ)] = calcChiCalcPoint(orbital, molecule, x, y, z);
-		results[indexX + (blockDim.x*indexY) + (blockDim.x*blockDim.y*indexZ)] = 123;
+		results[indexX + (internalData.ncub0*indexY) + (internalData.ncub0*internalData.ncub1*indexZ)] = calcChiCalcPoint(orbital, molecule, x, y, z);
+		//results[indexX + (internalData.ncub0*indexY) + (internalData.ncub0*internalData.ncub1*indexZ)] = 123;
 	}
 	
 	if(indexX ==0 && indexY == 0 && indexZ == 0){
