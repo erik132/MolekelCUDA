@@ -267,9 +267,10 @@ vtkImageData* vtk_process_calc( Mol *mol,
   stop = false;
   float x, y, z, dx, dy, dz;
   short i, j, k;
-  int len, ncub[3], resultCounter = 0;;
+  int len, ncub[3], resultCounter = 0;
   CalcDensDataPack dataPack;
   CalcDensCudaService cudaService;
+  vtkImageData* cudaImage;
 
   type = -1;
   esl.logMessage("starting controller test");
@@ -281,17 +282,7 @@ vtkImageData* vtk_process_calc( Mol *mol,
   }
   
 
-  dataPack.mol=mol;
-  dataPack.dim=dim;
-  dataPack.ncubes=ncubes;
-  dataPack.key=key;
-  dataPack.orbital=molOrb;
-	
-  if(dataPack.mol==NULL){
-	  esl.logMessage("datapack molecule is NULL");
-  }else{
-	  esl.logMessage("datapack is not null");
-  }
+
 
 
 
@@ -300,9 +291,19 @@ vtkImageData* vtk_process_calc( Mol *mol,
   minValue = std::numeric_limits< double >::max();
   maxValue = std::numeric_limits< double >::min();
 
+  dataPack.mol=mol;
+  dataPack.dim=dim;
+  dataPack.ncubes=ncubes;
+  dataPack.key=key;
+  dataPack.orbital=molOrb;
+  dataPack.minValue = minValue;
+  dataPack.maxValue = maxValue;
+
   ncub[0] = *ncubes++;
   ncub[1] = *ncubes++;
   ncub[2] = *ncubes++;
+
+
 
 	esl.logMessage("initial vodoo executed");
   // UV why do we need alha/beta orbital information when key == MEP ?
@@ -323,8 +324,8 @@ vtkImageData* vtk_process_calc( Mol *mol,
 		  return 0;
 	  }
   } // if( key != MEP )
-
-  if(cudaService.vtkProcessCalc(&dataPack)==NULL){
+	cudaImage = cudaService.vtkProcessCalc(&dataPack);
+  if(cudaImage==NULL){
 	  esl.logMessage("controller tested");
   }else{
 	  esl.logMessage("controller did not return null");
@@ -442,22 +443,25 @@ vtkImageData* vtk_process_calc( Mol *mol,
   for (i=0, z=dim[4]; i<ncub[2]; i++, z += dz) {
    for (j=0, y=dim[2]; j<ncub[1]; j++, y += dy) {
 	for (k=0, x=dim[0]; k<ncub[0]; k++, x += dx) {
-		if(i==0 && j==0 && k==0){
+		/*if(i==0 && j==0 && k==0){
 			comparisonMoment = true;
 		}else{
 			comparisonMoment = false;
-		}
+		}*/
       const double s = (*funct)(mol, x, y, z);
 	  /*if(i < 5 && j <5 && k<5){
 		sprintf(buffer, "x: %d y: %d z: %d value is %.15f", k, j, i, s);
 		esl.logMessage(buffer);
-	  }*/
+	  }
 	  sprintf(buffer, "nr: %d value is %.15f", resultCounter, s);
 		esl.logMessage(buffer);
-	resultCounter++;
+	resultCounter++;*/
       if( s < minValue ) minValue = s;
       if( s > maxValue ) maxValue = s;
       image->SetScalarComponentFromDouble( k, j, i, 0, s );
+
+	  sprintf(buffer, "old molekel: %.15f new molekel: %.15f", image->GetScalarComponentAsDouble(k, j, i, 0), cudaImage->GetScalarComponentAsDouble(k, j, i, 0));
+		esl.logMessage(buffer);
       if( stop == true ) goto stopped; // forward jump to stopped label
     }
    }
@@ -684,10 +688,10 @@ double calc_point(Mol *mol, float x, float y, float z)
    value = 0;
    for(i=0; i<mol->nBasisFunctions; i++) {
       value += ao_coeff[i]*chi[i];
-	  if(comparisonMoment == true){
+	  /*if(comparisonMoment == true){
 		  sprintf(buffer, "chi nr %d value is %.15f", i, chi[i]);
 		  esl.logMessage(buffer);
-	  }
+	  }*/
    }
 
    return value;

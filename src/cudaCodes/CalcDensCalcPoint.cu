@@ -20,15 +20,10 @@ __global__ void calcPoint(CudaMolecule *molecule, CalcDensInternalData internalD
 		x = internalData.dim0 + indexX*internalData.dx;
 		y = internalData.dim2 + indexY*internalData.dy;
 		z = internalData.dim4 + indexZ*internalData.dz;
+		
+		result = calcChiCalcPoint(orbital, molecule, x, y, z);
 
-		//this needs to be redone. You can not put 1MB or more on a 64KB chip!
-		//calcChi(memLocation, molecule, x, y, z);
-
-		/*for(i=0; i<basisFunctions; i++){
-			result += memLocation[i] + orbital->deviceCoefficients[i];
-		}*/
-
-		results[indexX + (internalData.ncub0*indexY) + (internalData.ncub0*internalData.ncub1*indexZ)] = calcChiCalcPoint(orbital, molecule, x, y, z);
+		results[indexX + (internalData.ncub0*indexY) + (internalData.ncub0*internalData.ncub1*indexZ)] = result;
 		//results[indexX + (internalData.ncub0*indexY) + (internalData.ncub0*internalData.ncub1*indexZ)] = 123;
 	}
 	
@@ -43,7 +38,6 @@ __global__ void calcPoint(CudaMolecule *molecule, CalcDensInternalData internalD
 
 vtkImageData* CalcDensCalcPoint::calcImageData(){
 	
-	//CudaMolecule molecule;
 	ESLogger esl("CudaCalcDensCalcPoint.txt");
 	esl.logMessage("function started");
 	cudaError_t status;
@@ -51,7 +45,7 @@ vtkImageData* CalcDensCalcPoint::calcImageData(){
 	const int resultsLength = calcData.ncub0*calcData.ncub1*calcData.ncub2;
 	int i, j, k, counter;
 	char buffer[100];
-	float x,y,z;
+	vtkImageData* imageData;
 	
 	sprintf(buffer, "resultsLength is %d" , resultsLength);
 	esl.logMessage(buffer);
@@ -120,30 +114,33 @@ vtkImageData* CalcDensCalcPoint::calcImageData(){
 			}
 		}
 	}*/
-	/*counter = 0;
-	for (i=0, z=calcData.dim4; i<calcData.ncub2; i++, z += calcData.dz) {
-		for (j=0, y=calcData.dim2; j<calcData.ncub1; j++, y += calcData.dy) {
-			for (k=0, x=calcData.dim0; k<calcData.ncub0; k++, x += calcData.dx) {
+	imageData = initImageData();
+	counter = 0;
+	for (i=0; i<calcData.ncub2; i++) {
+		for (j=0; j<calcData.ncub1; j++) {
+			for (k=0; k<calcData.ncub0; k++) {
 				
-				if(i < 5 && j <5 && k<5){
+				/*if(i < 5 && j <5 && k<5){
 					sprintf(buffer, "x: %d y: %d z: %d value is %.15f", k, j, i, results[counter]);
 					esl.logMessage(buffer);
-				}
+				}*/
+				//imageData->SetScalarComponentFromDouble( k, j, i, 0, results[k + (calcData.ncub0*j) + (calcData.ncub0*calcData.ncub1*i)] );
+				imageData->SetScalarComponentFromDouble( k, j, i, 0, results[counter] );
 				counter++;
 
 			}
 		}
-	}*/
+	}
 
 	/*for(i=0; i<cudaMolecule.nBasisFunctions; i++){
 		sprintf(buffer, "nr: %d value is %.15f",  i, hostChi[i]);
 		esl.logMessage(buffer);
 	}*/
 
-	for(i=0; i<resultsLength; i++){
+	/*for(i=0; i<resultsLength; i++){
 		sprintf(buffer, "nr %d value is %.15f", i, results[i]);
 		esl.logMessage(buffer);
-	}
+	}*/
 
 
 	CalcDensCalcPoint::deleteDeviceData();
@@ -152,11 +149,11 @@ vtkImageData* CalcDensCalcPoint::calcImageData(){
 	delete[] hostChi;
 	cudaFree(deviceChi);
 	
-	return NULL;
+	return imageData;
 }
 
 CalcDensCalcPoint::CalcDensCalcPoint(CalcDensDataPack *data): CalcDensCudaFunction(data){
-	//CalcDensCudaFunction::CalcDensCudaFunction(Molecule *mol, float *dim, int *ncubes);
+	
 }
 
 

@@ -26,7 +26,7 @@ private:
 
 protected:
 	//variables
-	vtkImageData* initImageData();
+	
 	CalcDensInternalData calcData;
 	CudaMolecule cudaMolecule;
 	CudaMolecule *deviceMolecule;
@@ -36,6 +36,7 @@ protected:
 	
 	//methods
 	dim3 getGridSize();
+	vtkImageData* initImageData();
 	
 
 

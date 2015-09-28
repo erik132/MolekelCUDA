@@ -7,5 +7,6 @@ struct CalcDensDataPack{
 	float *dim;
 	int *ncubes;
 	int key;
+	double minValue, maxValue;
 
 };

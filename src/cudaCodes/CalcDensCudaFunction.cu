@@ -17,6 +17,9 @@ CalcDensCudaFunction::CalcDensCudaFunction(CalcDensDataPack *data){
 	ESLogger esl("CalcDensCudaFunction.txt");
 	esl.logMessage("function started");
 	BLOCK_DIM = 5;
+	
+	calcData.minValue = data->minValue;
+	calcData.maxValue = data->maxValue;
 
 	calcData.ncub0 = *data->ncubes++;
 	calcData.ncub1 = *data->ncubes++;
