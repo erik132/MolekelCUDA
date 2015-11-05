@@ -280,11 +280,6 @@ vtkImageData* vtk_process_calc( Mol *mol,
   }else{
 	  esl.logMessage("Molecule was not null");
   }
-  
-
-
-
-
 
   double (*funct)(Mol *mol, float x, float y, float z);
 
@@ -460,8 +455,8 @@ vtkImageData* vtk_process_calc( Mol *mol,
       if( s > maxValue ) maxValue = s;
       image->SetScalarComponentFromDouble( k, j, i, 0, s );
 
-	  sprintf(buffer, "old molekel: %.15f new molekel: %.15f", image->GetScalarComponentAsDouble(k, j, i, 0), cudaImage->GetScalarComponentAsDouble(k, j, i, 0));
-		esl.logMessage(buffer);
+	  /*sprintf(buffer, "old molekel: %.15f new molekel: %.15f", image->GetScalarComponentAsDouble(k, j, i, 0), cudaImage->GetScalarComponentAsDouble(k, j, i, 0));
+		esl.logMessage(buffer);*/
       if( stop == true ) goto stopped; // forward jump to stopped label
     }
    }

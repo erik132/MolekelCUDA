@@ -3,17 +3,15 @@
 #include "molekelHelpFunctions/CalcChiCalcPoint.cu"
 #include "molekelHelpFunctions/CalcChi.cu"
 
-__global__ void calcPoint(CudaMolecule *molecule, CalcDensInternalData internalData, CudaMolecularOrbital *orbital, double *results, double *chiArray){
+#include "gputimer.h"
+
+__global__ void calcPoint(CudaMolecule *molecule, CalcDensInternalData internalData, CudaMolecularOrbital *orbital, double *results){
 
 	double result = 1;
 	int indexZ = threadIdx.z + (blockDim.z*blockIdx.z);
 	int	indexY = threadIdx.y + (blockDim.y*blockIdx.y);
 	int	indexX = threadIdx.x + (blockDim.x*blockIdx.x);
 	float x,y,z;
-	const int basisFunctions = molecule->nBasisFunctions;
-	int i;
-	
-
 
 	if(indexX < internalData.ncub0 && indexY < internalData.ncub1 && indexZ < internalData.ncub2){
 		
@@ -24,13 +22,6 @@ __global__ void calcPoint(CudaMolecule *molecule, CalcDensInternalData internalD
 		result = calcChiCalcPoint(orbital, molecule, x, y, z);
 
 		results[indexX + (internalData.ncub0*indexY) + (internalData.ncub0*internalData.ncub1*indexZ)] = result;
-		//results[indexX + (internalData.ncub0*indexY) + (internalData.ncub0*internalData.ncub1*indexZ)] = 123;
-	}
-	
-	if(indexX ==0 && indexY == 0 && indexZ == 0){
-		for(i=0; i<molecule->nBasisFunctions; i++)
-			chiArray[i] = 0;
-		calcChi(chiArray, molecule, x, y, z);
 	}
 	
 }
@@ -41,11 +32,12 @@ vtkImageData* CalcDensCalcPoint::calcImageData(){
 	ESLogger esl("CudaCalcDensCalcPoint.txt");
 	esl.logMessage("function started");
 	cudaError_t status;
-	double *results, *deviceResults, *hostChi, *deviceChi;
+	double *results, *deviceResults;
 	const int resultsLength = calcData.ncub0*calcData.ncub1*calcData.ncub2;
 	int i, j, k, counter;
 	char buffer[100];
 	vtkImageData* imageData;
+	GpuTimer gputimer;
 	
 	sprintf(buffer, "resultsLength is %d" , resultsLength);
 	esl.logMessage(buffer);
@@ -53,13 +45,8 @@ vtkImageData* CalcDensCalcPoint::calcImageData(){
 
 	results = new double[resultsLength];
 
-	for(i=0; i<resultsLength; i++){
-		results[i] = 2;
-	}
-
 	dim3 blockSize(BLOCK_DIM,BLOCK_DIM,BLOCK_DIM);
 	dim3 gridSize = getGridSize();
-	//dim3 gridSize(1);
 
 	status = CalcDensCalcPoint::moleculeToDevice();
 
@@ -75,8 +62,6 @@ vtkImageData* CalcDensCalcPoint::calcImageData(){
 	esl.logMessage(buffer);
 
 	status=cudaMalloc((void**)&deviceResults, sizeof(double)*resultsLength);
-	status=cudaMalloc((void**)&deviceChi, sizeof(double)*cudaMolecule.nBasisFunctions);
-	hostChi = new double[cudaMolecule.nBasisFunctions];
 
 	if(status == cudaSuccess){
 		esl.logMessage("memory allocation on device success");
@@ -84,8 +69,12 @@ vtkImageData* CalcDensCalcPoint::calcImageData(){
 		sprintf(buffer, "memory allocation on device failed, errorcode %s", cudaGetErrorString(status));
 		esl.logMessage(buffer);
 	}
-
-	calcPoint<<<gridSize, blockSize>>>(deviceMolecule, calcData, deviceOrbital, deviceResults, deviceChi);
+	
+	gputimer.Start();
+	calcPoint<<<gridSize, blockSize>>>(deviceMolecule, calcData, deviceOrbital, deviceResults);
+	gputimer.Stop();
+	sprintf(buffer, "kernel run time: %f", gputimer.Elapsed());
+	esl.logMessage(buffer);
 	status = cudaGetLastError();
 
 	if(status == cudaSuccess){
@@ -97,7 +86,6 @@ vtkImageData* CalcDensCalcPoint::calcImageData(){
 	status = cudaDeviceSynchronize();
 
 	status = cudaMemcpy(results, deviceResults, sizeof(double)*resultsLength, cudaMemcpyDeviceToHost);
-	status = cudaMemcpy(hostChi, deviceChi, sizeof(double)*cudaMolecule.nBasisFunctions, cudaMemcpyDeviceToHost);
 
 	if(status == cudaSuccess){
 		esl.logMessage("memcpy from device success");
@@ -146,8 +134,6 @@ vtkImageData* CalcDensCalcPoint::calcImageData(){
 	CalcDensCalcPoint::deleteDeviceData();
 
 	delete[] results;
-	delete[] hostChi;
-	cudaFree(deviceChi);
 	
 	return imageData;
 }

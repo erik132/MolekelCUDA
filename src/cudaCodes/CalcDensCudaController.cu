@@ -1,5 +1,5 @@
 #include "CalcDensCudaController.cuh"
-
+#include "gputimer.h"
 #include "CalcDensCalcPoint.cuh"
 
 void CalcDensCudaController::getOrbitalFunction(CalcDensDataPack *data){
@@ -79,6 +79,11 @@ void CalcDensCudaController::getSpinDensityFunction(CalcDensDataPack *data){
 vtkImageData* CalcDensCudaController::vtkProcessCalc(CalcDensDataPack *data){
 	
 	ESLogger esl("CalcDensCudaController.txt");
+	GpuTimer gputimer;
+	char buffer[100];
+	vtkImageData *returnData;
+
+
 	esl.logMessage("function started");
 
 	switch(data->key) {
@@ -104,7 +109,17 @@ vtkImageData* CalcDensCudaController::vtkProcessCalc(CalcDensDataPack *data){
 	}else{
 		esl.logMessage("data pac molecule was NOT NULL");
 	}*/
-	return calcFunction->calcImageData();
+	if (calcFunction != NULL){
+		gputimer.Start();
+		returnData = calcFunction->calcImageData();
+		gputimer.Stop();
+		sprintf(buffer,"total gpu elapsed time: %f",gputimer.Elapsed());
+		esl.logMessage(buffer);
+		return returnData;
+		
+	}else{
+		return NULL;
+	}
 }
 
 CalcDensCudaController::~CalcDensCudaController(){

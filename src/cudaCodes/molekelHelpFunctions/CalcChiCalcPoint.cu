@@ -16,7 +16,6 @@ static __device__ double calcChiCalcPoint(CudaMolecularOrbital *orbital, CudaMol
 	float xa, ya, za, ra2;  /* atomic units !! */
 	int atom, shell, gauss, i;
 
-	const int nBasisFunctions = molecule->nBasisFunctions;
 	const int atomsSize = molecule->atomsSize;
 	int shellsSize, gaussSize, count=0;
 	Gauss tempGauss;
