@@ -8,7 +8,8 @@ void CalcDensCudaController::getOrbitalFunction(CalcDensDataPack *data){
 		  case GAMESS_ORB :
 		  case HONDO_ORB  :
 		  case GAUSS_ORB  : 
-			  CalcDensCudaController::calcFunction = new CalcDensCalcPoint(data); break;
+			  CalcDensCudaController::calcFunction = new CalcDensCalcPoint(data); 
+			break;
 
 		  case MOS_ORB   :
 		  case ZINDO_ORB  :
@@ -67,8 +68,8 @@ void CalcDensCudaController::getSpinDensityFunction(CalcDensDataPack *data){
 	   else {
 		printf("density matrix generated...\n");
 		funct = calculate_density;
-	   }
-	   break;*/
+	   }*/
+	   break;
 	  case MOS_ORB   :
 	  case ZINDO_ORB  :
 	  case PRDDO_ORB  : /*funct = calc_prddo_spindensity;*/ break;
@@ -85,17 +86,20 @@ vtkImageData* CalcDensCudaController::vtkProcessCalc(CalcDensDataPack *data){
 
 
 	esl.logMessage("function started");
-
+	calcFunction = NULL;
 	switch(data->key) {
 	   case CALC_ORB  :
+		   esl.logMessage("using key CALC_ORB");
 			CalcDensCudaController::getOrbitalFunction(data);
 		break;
 
 	   case EL_DENS :
+		   esl.logMessage("using key EL_DENS");
 			CalcDensCudaController::getElectroDensityFunction(data);
 		break;
 
 	   case SPIN_DENS :
+		   esl.logMessage("using key SPIN_DENS");
 		   CalcDensCudaController::getSpinDensityFunction(data);
 		break;
 
@@ -110,6 +114,7 @@ vtkImageData* CalcDensCudaController::vtkProcessCalc(CalcDensDataPack *data){
 		esl.logMessage("data pac molecule was NOT NULL");
 	}*/
 	if (calcFunction != NULL){
+		esl.logMessage("calcFunction is not NULL");
 		gputimer.Start();
 		returnData = calcFunction->calcImageData();
 		gputimer.Stop();
@@ -118,8 +123,13 @@ vtkImageData* CalcDensCudaController::vtkProcessCalc(CalcDensDataPack *data){
 		return returnData;
 		
 	}else{
+		esl.logMessage("calcFunction is NULL");
 		return NULL;
 	}
+}
+
+CalcDensCudaController::CalcDensCudaController(){
+	calcFunction = NULL;
 }
 
 CalcDensCudaController::~CalcDensCudaController(){

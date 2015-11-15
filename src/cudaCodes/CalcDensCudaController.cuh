@@ -18,6 +18,7 @@ private:
 	void getSpinDensityFunction(CalcDensDataPack *data);
 public:
 	vtkImageData* vtkProcessCalc(CalcDensDataPack *data);
+	CalcDensCudaController();
 	~CalcDensCudaController();
 
 };
