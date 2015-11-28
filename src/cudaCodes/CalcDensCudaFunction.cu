@@ -51,13 +51,6 @@ cudaError_t CalcDensCudaFunction::moleculeToDevice(){
 	
 	cudaError_t status;
 
-	status = cpyOrbital();
-
-	if(status != cudaSuccess){
-		return status;
-	}
-
-
 	status = cudaMolecule.cpyInternalPointers();
 
 	if(status!=cudaSuccess){
@@ -74,16 +67,20 @@ cudaError_t CalcDensCudaFunction::moleculeToDevice(){
 	return status;
 }
 
-void CalcDensCudaFunction::deleteDeviceData(){
+void CalcDensCudaFunction::deleteDeviceMoleculeData(){
 
 	cudaMolecule.clearCudaData();
 	cudaFree(deviceMolecule);
-	cudaOrbital.clearCudaData();
-	cudaFree(deviceOrbital);
+	
 
 }
 
-cudaError_t CalcDensCudaFunction::cpyOrbital(){
+void CalcDensCudaFunction::deleteDeviceOrbitalData(){
+	cudaOrbital.clearCudaData();
+	cudaFree(deviceOrbital);
+}
+
+cudaError_t CalcDensCudaFunction::orbitalToDevice(){
 
 	cudaError_t status = cudaOrbital.cpyInternalPointers();
 	if(status != cudaSuccess){

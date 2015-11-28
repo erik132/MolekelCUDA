@@ -50,12 +50,17 @@ vtkImageData* CalcDensCalcPoint::calcImageData(){
 
 	status = CalcDensCalcPoint::moleculeToDevice();
 
-	
-	
 	if(status == cudaSuccess){
-		esl.logMessage("molecule copied with success");
+		esl.logMessage("Molecule copied with success");
 	}else{
 		esl.logMessage("Molecule copy failed");
+	}
+
+	status = CalcDensCalcPoint::orbitalToDevice();
+	if(status == cudaSuccess){
+		esl.logMessage("Orbital copied with success");
+	}else{
+		esl.logMessage("Orbital copy failed");
 	}
 
 	sprintf(buffer, "ncub0 %d, ncub1 %d, ncub2 %d", calcData.ncub0, calcData.ncub1, calcData.ncub2);
@@ -94,25 +99,12 @@ vtkImageData* CalcDensCalcPoint::calcImageData(){
 	}
 	cudaFree(deviceResults);
 	
-	/*for(i=0; i<BLOCK_DIM; i++){
-		for(j=0; j<BLOCK_DIM; j++){
-			for(k=0; k<BLOCK_DIM; k++){
-				sprintf(buffer, "x: %d y: %d z: %d value is %.15f", k, j, i, results[k + (BLOCK_DIM*j) + (BLOCK_DIM*BLOCK_DIM*i)]);
-				esl.logMessage(buffer);
-			}
-		}
-	}*/
 	imageData = initImageData();
 	counter = 0;
 	for (i=0; i<calcData.ncub2; i++) {
 		for (j=0; j<calcData.ncub1; j++) {
 			for (k=0; k<calcData.ncub0; k++) {
-				
-				/*if(i < 5 && j <5 && k<5){
-					sprintf(buffer, "x: %d y: %d z: %d value is %.15f", k, j, i, results[counter]);
-					esl.logMessage(buffer);
-				}*/
-				//imageData->SetScalarComponentFromDouble( k, j, i, 0, results[k + (calcData.ncub0*j) + (calcData.ncub0*calcData.ncub1*i)] );
+
 				imageData->SetScalarComponentFromDouble( k, j, i, 0, results[counter] );
 				counter++;
 
@@ -131,7 +123,8 @@ vtkImageData* CalcDensCalcPoint::calcImageData(){
 	}*/
 
 
-	CalcDensCalcPoint::deleteDeviceData();
+	CalcDensCalcPoint::deleteDeviceMoleculeData();
+	CalcDensCalcPoint::deleteDeviceOrbitalData();
 
 	delete[] results;
 	

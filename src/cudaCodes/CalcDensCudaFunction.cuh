@@ -19,7 +19,7 @@
 class CalcDensCudaFunction{
 private:
 	//variables
-	cudaError_t cpyOrbital();
+	
 
 	//methods
 	int getSingleGridSize(int elements, int blockSize);
@@ -45,6 +45,8 @@ public:
 	CalcDensCudaFunction(CalcDensDataPack *data);
 
 	cudaError_t moleculeToDevice();
-	void deleteDeviceData();
+	cudaError_t orbitalToDevice();
+	void deleteDeviceMoleculeData();
+	void deleteDeviceOrbitalData();
 
 };

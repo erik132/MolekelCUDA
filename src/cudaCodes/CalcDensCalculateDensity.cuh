@@ -14,11 +14,11 @@
 
 
 
-class CalcDensCalcPoint: public CalcDensCudaFunction{
+class CalcDensCalculateDensity: public CalcDensCudaFunction{
 
 
 public:
 	vtkImageData* calcImageData() override;
-	CalcDensCalcPoint(CalcDensDataPack *data);
+	CalcDensCalculateDensity(CalcDensDataPack *data);
 
 };
