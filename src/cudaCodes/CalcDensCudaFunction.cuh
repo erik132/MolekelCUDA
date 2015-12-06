@@ -23,6 +23,7 @@ private:
 
 	//methods
 	int getSingleGridSize(int elements, int blockSize);
+	void *alloc_trimat(int n, size_t size);
 
 protected:
 	//variables
@@ -33,6 +34,11 @@ protected:
 	CudaMolecularOrbital cudaOrbital;
 	CudaMolecularOrbital *deviceOrbital;
 	int BLOCK_DIM;
+	float **densityMatrix;
+	float *deviceDensityMatrix;
+	int densityMatrixLength;
+	Molecule *mol;
+	int key;
 	
 	//methods
 	dim3 getGridSize();
@@ -43,10 +49,15 @@ protected:
 public:
 	virtual vtkImageData* calcImageData() = 0;
 	CalcDensCudaFunction(CalcDensDataPack *data);
+	int createDensityMatrix();
+
+	void deleteDensityMatrix();
 
 	cudaError_t moleculeToDevice();
 	cudaError_t orbitalToDevice();
+	cudaError_t densityMatrixToDevice();
 	void deleteDeviceMoleculeData();
 	void deleteDeviceOrbitalData();
+	void deleteDeviceDensityMatrix();
 
 };

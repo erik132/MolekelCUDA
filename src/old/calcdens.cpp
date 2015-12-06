@@ -274,6 +274,11 @@ vtkImageData* vtk_process_calc( Mol *mol,
   vtkImageData* cudaImage = NULL;
   clock_t elapsedTime;
   float floatTime;
+  char buffer[1000];
+
+  int CHECK_SIZE = 200;
+  float checkSum = 0;
+  if(CHECK_SIZE > mol->nBasisFunctions) CHECK_SIZE = mol->nBasisFunctions;
 
   type = -1;
   esl.logMessage("starting controller test");
@@ -296,6 +301,7 @@ vtkImageData* vtk_process_calc( Mol *mol,
   dataPack.orbital=molOrb;
   dataPack.minValue = minValue;
   dataPack.maxValue = maxValue;
+  dataPack.datasource = datasource;
 
   ncub[0] = *ncubes++;
   ncub[1] = *ncubes++;
@@ -365,6 +371,20 @@ vtkImageData* vtk_process_calc( Mol *mol,
        else {
         printf("density matrix generated...\n");
 		esl.logMessage("function calculate_density activated first occasion");
+		/*for(i=0; i<mol->nBasisFunctions; i++){
+			for(j=0; j<=i; j++){
+				sprintf(buffer, "matrix point at %d %d value: %f", i, j, density[i][j]);
+				esl.logMessage(buffer);
+		  }
+		}*/
+		for(i=0; i<CHECK_SIZE; i++){
+			checkSum = 0;
+			for(j=0; j<=i; j++){
+				checkSum += density[i][j];
+			}
+			sprintf(buffer, "check sum at %d value: %f", i, checkSum);
+			esl.logMessage(buffer);
+		}
         funct = calculate_density;
        }
        break;
@@ -430,7 +450,7 @@ vtkImageData* vtk_process_calc( Mol *mol,
   dz = (dim[5]-dim[4])/(ncub[2]-1);
   len = 4*ncub[0]*ncub[1];
 	
-	char buffer[1000];
+	
 	sprintf(buffer, "image data: ncub0 %d, ncub1 %d, ncub2 %d, dim0 %f, dim2 %f, dim4 %f, dx %f, dy %f, dz %f, nBasis Functions %d", 
 		ncub[0], ncub[1], ncub[2], dim[0], dim[2], dim[4], dx, dy,dz, mol->nBasisFunctions);
 	esl.logMessage(buffer);

@@ -17,7 +17,8 @@ CalcDensCudaFunction::CalcDensCudaFunction(CalcDensDataPack *data){
 	ESLogger esl("CalcDensCudaFunction.txt");
 	esl.logMessage("function started");
 	BLOCK_DIM = 5;
-	
+
+	densityMatrix = NULL;
 	calcData.minValue = data->minValue;
 	calcData.maxValue = data->maxValue;
 
@@ -28,21 +29,33 @@ CalcDensCudaFunction::CalcDensCudaFunction(CalcDensDataPack *data){
 	calcData.dim0 = data->dim[0];
 	calcData.dim2 = data->dim[2];
 	calcData.dim4 = data->dim[4];
+	esl.logMessage("starting to cpy datasource");
+	calcData.datasource = data->datasource;
 
 	calcData.dx = (data->dim[1] - data->dim[0]) / (calcData.ncub0 - 1);
 	calcData.dy = (data->dim[3] - data->dim[2]) / (calcData.ncub1 - 1);
 	calcData.dz = (data->dim[5] - data->dim[4]) / (calcData.ncub2 - 1);
-	
-	cudaMolecule.setProperties(data->mol);
-	cudaOrbital.setProperties(data->orbital,data->mol);
+	esl.logMessage("starting to cpy mol and key");
+	this->mol = data->mol;
+	this->key = data->key;
+	esl.logMessage("mol and key cpy success");
 
-	
+	if(data->mol == NULL){
+		esl.logMessage("data pack mol is NULL");
+	}else{
+		esl.logMessage("data pac mol is not NULL");
+	}
 
 	if(data->orbital == NULL){
 		esl.logMessage("data pack molecularOrbital is NULL");
 	}else{
 		esl.logMessage("data pac molecularOrbital is not NULL");
+		cudaOrbital.setProperties(data->orbital,data->mol);
 	}
+	cudaMolecule.setProperties(data->mol);
+	
+
+	
 }
 
 
@@ -124,4 +137,132 @@ int CalcDensCudaFunction::getSingleGridSize(int elements, int blockSize){
 	}
 
 	return result;
+}
+
+int CalcDensCudaFunction::createDensityMatrix(){
+	register short i, j, k;
+	float adder;
+
+	if(!mol->alphaDensity && calcData.datasource == USE_MATRICES) return 0;
+
+	if((densityMatrix = (float **)alloc_trimat(mol->nBasisFunctions, sizeof(float))) == NULL){
+		fprintf(stderr, "can't allocate density-matrix\n");
+		return 0;
+	}
+
+	/* use the alpha (and beta) density matrices from the gaussian output file */
+	if(calcData.datasource == USE_MATRICES){
+	if(key == EL_DENS){
+	  if(mol->betaDensity){
+		for(i=0; i<mol->nBasisFunctions; i++){
+		  for(j=0; j<=i; j++)
+			densityMatrix[i][j] = mol->alphaDensity[i][j] + mol->betaDensity[i][j];
+		}
+	  }
+	  else {
+		for(i=0; i<mol->nBasisFunctions; i++){
+		  for(j=0; j<=i; j++) densityMatrix[i][j] = mol->alphaDensity[i][j];
+		}
+	  }
+	}
+	if(key == SPIN_DENS){
+	  if(!mol->betaDensity) return 0;
+	  for(i=0; i<mol->nBasisFunctions; i++){
+		for(j=0; j<=i; j++)
+		  densityMatrix[i][j]  = mol->alphaDensity[i][j] - mol->betaDensity[i][j];
+	  }
+	}
+	}
+
+	/* generate the density matrices with the coefficients */
+	else if(calcData.datasource == USE_COEFFS) {
+	if(key == EL_DENS){
+	  for(i=0; i<mol->nBasisFunctions; i++){
+		for(j=0; j<=i; j++){
+		  densityMatrix[i][j] = 0;
+		  for(k=0; k<mol->nBeta; k++){
+			adder = mol->alphaOrbital[k].coefficient[i] *
+				  mol->alphaOrbital[k].coefficient[j];
+			if(mol->alphaBeta)
+			  adder += mol->betaOrbital[k].coefficient[i] *
+					mol->betaOrbital[k].coefficient[j];
+			else adder *= 2.0;
+			densityMatrix[i][j] += adder;
+		  }
+		  for(; k<mol->nAlpha; k++)
+			densityMatrix[i][j] += mol->alphaOrbital[k].coefficient[i] *
+						mol->alphaOrbital[k].coefficient[j];
+		}
+	  }
+	}
+	if(key == SPIN_DENS){
+	  if(!mol->alphaBeta) {
+		for(i=0; i<mol->nBasisFunctions; i++){
+		  for(j=0; j<=i; j++){
+			densityMatrix[i][j] = 0;
+			for(k=mol->nBeta; k<mol->nAlpha; k++)
+			  densityMatrix[i][j] += mol->alphaOrbital[k].coefficient[i] *
+						  mol->alphaOrbital[k].coefficient[j];
+		  }
+		}
+	  }
+	  else {
+		for(i=0; i<mol->nBasisFunctions; i++){
+		  for(j=0; j<=i; j++){
+			densityMatrix[i][j] = 0;
+			for(k=0; k<mol->nAlpha; k++)
+			  densityMatrix[i][j] += mol->alphaOrbital[k].coefficient[i] *
+						  mol->alphaOrbital[k].coefficient[j];
+			for(k=0; k<mol->nBeta; k++)
+			  densityMatrix[i][j] -= mol->betaOrbital[k].coefficient[i] *
+						  mol->betaOrbital[k].coefficient[j];
+		  }
+		}
+	  }
+	}
+	}
+	else return 0;
+
+	return 1;
+}
+
+void CalcDensCudaFunction::deleteDeviceDensityMatrix(){
+	cudaFree(deviceDensityMatrix);
+}
+
+/* take straight from old/utilites.cpp */
+void *CalcDensCudaFunction::alloc_trimat(int n, size_t size)
+{
+	void **pointerarray;
+	char *array;
+	register short i;
+
+	if((array = (char*) malloc((n*(n+1))/2*size)) == NULL) return NULL;
+	  /* array will hold the data */
+	if((pointerarray = (void**) malloc(n*sizeof(char *))) == NULL) return NULL;
+	  /* pointerarray will hold the pointers to the rows of data */
+	for(i=0; i<n; i++) pointerarray[i] = array + (i*(i+1))/2*size;
+
+	return pointerarray;
+}
+
+void CalcDensCudaFunction::deleteDensityMatrix(){
+	if(densityMatrix){
+		free(densityMatrix[0]);
+		free(densityMatrix);
+		densityMatrix = NULL;
+	}
+}
+
+cudaError_t CalcDensCudaFunction::densityMatrixToDevice(){
+
+	densityMatrixLength = (mol->nBasisFunctions*(mol->nBasisFunctions+1))/2*sizeof(float);
+	cudaError_t status;
+
+	status = cudaMalloc(&deviceDensityMatrix, densityMatrixLength);
+	if(status != cudaSuccess) return status;
+	status = cudaMemcpy(deviceDensityMatrix, densityMatrix[0], densityMatrixLength, cudaMemcpyHostToDevice);
+	
+	return status;
+
 }

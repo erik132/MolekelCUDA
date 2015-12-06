@@ -8,5 +8,6 @@ struct CalcDensDataPack{
 	int *ncubes;
 	int key;
 	double minValue, maxValue;
+	int datasource;
 
 };
