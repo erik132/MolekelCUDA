@@ -1,13 +1,13 @@
 #include "CalcDensCalcPoint.cuh"
 
 #include "molekelHelpFunctions/CalcChiCalcPoint.cu"
-#include "molekelHelpFunctions/CalcChi.cu"
+
 
 #include "gputimer.h"
 
 __global__ void calcPoint(CudaMolecule *molecule, CalcDensInternalData internalData, CudaMolecularOrbital *orbital, double *results){
 
-	double result = 1;
+	double result = 0;
 	int indexZ = threadIdx.z + (blockDim.z*blockIdx.z);
 	int	indexY = threadIdx.y + (blockDim.y*blockIdx.y);
 	int	indexX = threadIdx.x + (blockDim.x*blockIdx.x);

@@ -223,6 +223,7 @@ float **density;
 double *chi;
 MolecularOrbital *molOrb;
 char timestring[300];
+int cudaGlobalCounter;
 
 bool comparisonMoment = false;
 //-----------------------------------------------------------------------------
@@ -275,6 +276,7 @@ vtkImageData* vtk_process_calc( Mol *mol,
   clock_t elapsedTime;
   float floatTime;
   char buffer[1000];
+  cudaGlobalCounter = 0;
 
   int CHECK_SIZE = 200;
   float checkSum = 0;
@@ -377,14 +379,14 @@ vtkImageData* vtk_process_calc( Mol *mol,
 				esl.logMessage(buffer);
 		  }
 		}*/
-		for(i=0; i<CHECK_SIZE; i++){
+		/*for(i=0; i<CHECK_SIZE; i++){
 			checkSum = 0;
 			for(j=0; j<=i; j++){
 				checkSum += density[i][j];
 			}
 			sprintf(buffer, "check sum at %d value: %f", i, checkSum);
 			esl.logMessage(buffer);
-		}
+		}*/
         funct = calculate_density;
        }
        break;
@@ -708,8 +710,8 @@ double calc_point(Mol *mol, float x, float y, float z)
 {
    register int i;
    double value, *ao_coeff;
-   char buffer[1000];
-   ESLogger esl("calcdens-calc_point.txt");
+   //char buffer[1000];
+   //ESLogger esl("calcdens-calc_point.txt");
    //esl.logMessage("function activated");
 
    ao_coeff = molOrb->coefficient;
@@ -760,9 +762,14 @@ double calculate_density(Mol *mol, float x, float y, float z)
 {
   register short i, j;
   double value;
+  ESLogger esl("calcdens-calculate_density.txt");
+  char buffer[1000];
 
   value = 0;
   calc_chi(mol, x, y, z);
+	sprintf(buffer, "result check %d value: %.15f", cudaGlobalCounter, chi[500]);
+	esl.logMessage(buffer);
+	cudaGlobalCounter++;
 
   for(i=0; i<mol->nBasisFunctions; i++){
     value += density[i][i] * chi[i] * chi[i];
