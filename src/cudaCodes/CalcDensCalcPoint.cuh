@@ -15,10 +15,17 @@
 
 
 class CalcDensCalcPoint: public CalcDensCudaFunction{
+private:
+	double *results, *deviceResults;
+	int resultsLength;
 
+protected:
+	cudaError_t initData() override;
+	vtkImageData* runComputation() override;
+	void cleanupData() override;
 
 public:
-	vtkImageData* calcImageData() override;
+	
 	CalcDensCalcPoint(CalcDensDataPack *data);
 
 };

@@ -43,11 +43,14 @@ protected:
 	//methods
 	dim3 getGridSize();
 	vtkImageData* initImageData();
+	virtual cudaError_t initData() = 0;
+	virtual vtkImageData* runComputation() = 0;
+	virtual void cleanupData() = 0;
 	
 
 
 public:
-	virtual vtkImageData* calcImageData() = 0;
+	vtkImageData* calcImageData();
 	CalcDensCudaFunction(CalcDensDataPack *data);
 	int createDensityMatrix();
 

@@ -261,3 +261,13 @@ cudaError_t CalcDensCudaFunction::densityMatrixToDevice(){
 	return status;
 
 }
+
+vtkImageData* CalcDensCudaFunction::calcImageData(){
+	vtkImageData* result = NULL;
+
+	if(initData() == cudaSuccess){
+		result = runComputation();
+	}
+	cleanupData();
+	return result;
+}

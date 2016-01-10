@@ -1,8 +1,6 @@
 #include "CalcDensCalcPoint.cuh"
 
 #include "molekelHelpFunctions/CalcChiCalcPoint.cu"
-
-
 #include "gputimer.h"
 
 __global__ void calcPoint(CudaMolecule *molecule, CalcDensInternalData internalData, CudaMolecularOrbital *orbital, double *results){
@@ -26,76 +24,71 @@ __global__ void calcPoint(CudaMolecule *molecule, CalcDensInternalData internalD
 	
 }
 
+cudaError_t CalcDensCalcPoint::initData(){
+	ESLogger esl("CudaCalcDensCalcPoint.txt");
+	char buffer[100];
+	cudaError_t status;
 
-vtkImageData* CalcDensCalcPoint::calcImageData(){
+	resultsLength = calcData.ncub0*calcData.ncub1*calcData.ncub2;
+	results = new double[resultsLength];
+	
+	status = CalcDensCalcPoint::moleculeToDevice();
+	if(status != cudaSuccess){
+		esl.logMessage("Molecule copy failed");
+		return status;
+	}
+
+	status = CalcDensCalcPoint::orbitalToDevice();
+	if(status != cudaSuccess){
+		esl.logMessage("Orbital copy failed");
+		return status;
+	}
+
+	status=cudaMalloc((void**)&deviceResults, sizeof(double)*resultsLength);
+	if(status != cudaSuccess){
+		sprintf(buffer, "memory allocation on device failed, errorcode %s", cudaGetErrorString(status));
+		esl.logMessage(buffer);
+		return status;
+	}
+
+	return cudaSuccess;
+}
+
+vtkImageData* CalcDensCalcPoint::runComputation(){
 	
 	ESLogger esl("CudaCalcDensCalcPoint.txt");
 	esl.logMessage("function started");
 	cudaError_t status;
-	double *results, *deviceResults;
-	const int resultsLength = calcData.ncub0*calcData.ncub1*calcData.ncub2;
 	int i, j, k, counter;
 	char buffer[100];
 	vtkImageData* imageData;
 	GpuTimer gputimer;
 	
-	sprintf(buffer, "resultsLength is %d" , resultsLength);
-	esl.logMessage(buffer);
-	
-
-	results = new double[resultsLength];
-
 	dim3 blockSize(BLOCK_DIM,BLOCK_DIM,BLOCK_DIM);
 	dim3 gridSize = getGridSize();
 
-	status = CalcDensCalcPoint::moleculeToDevice();
-
-	if(status == cudaSuccess){
-		esl.logMessage("Molecule copied with success");
-	}else{
-		esl.logMessage("Molecule copy failed");
-	}
-
-	status = CalcDensCalcPoint::orbitalToDevice();
-	if(status == cudaSuccess){
-		esl.logMessage("Orbital copied with success");
-	}else{
-		esl.logMessage("Orbital copy failed");
-	}
-
-	sprintf(buffer, "ncub0 %d, ncub1 %d, ncub2 %d", calcData.ncub0, calcData.ncub1, calcData.ncub2);
-	esl.logMessage(buffer);
-
-	status=cudaMalloc((void**)&deviceResults, sizeof(double)*resultsLength);
-
-	if(status == cudaSuccess){
-		esl.logMessage("memory allocation on device success");
-	}else{
-		sprintf(buffer, "memory allocation on device failed, errorcode %s", cudaGetErrorString(status));
-		esl.logMessage(buffer);
-	}
 	
 	gputimer.Start();
 	calcPoint<<<gridSize, blockSize>>>(deviceMolecule, calcData, deviceOrbital, deviceResults);
 	gputimer.Stop();
 	sprintf(buffer, "kernel run time: %f", gputimer.Elapsed());
 	esl.logMessage(buffer);
-	status = cudaGetLastError();
 
-	if(status == cudaSuccess){
-		esl.logMessage("kernel launch success");
-	}else{
+	status = cudaGetLastError();
+	if(status != cudaSuccess){
 		sprintf(buffer, "Kernel launch failed, errorcode %s", cudaGetErrorString(status));
 		esl.logMessage(buffer);
 	}
 	status = cudaDeviceSynchronize();
+	if(status != cudaSuccess){
+		sprintf(buffer, "Device synchronization failed, errorcode %s", cudaGetErrorString(status));
+		esl.logMessage(buffer);
+	}
 
 	status = cudaMemcpy(results, deviceResults, sizeof(double)*resultsLength, cudaMemcpyDeviceToHost);
-
-	if(status == cudaSuccess){
-		esl.logMessage("memcpy from device success");
-	}else{
-		esl.logMessage("memcpy from device failed");
+	if(status != cudaSuccess){
+		sprintf(buffer, "memcpy from device failed, errorcode %s", cudaGetErrorString(status));
+		esl.logMessage(buffer);
 	}
 	cudaFree(deviceResults);
 	
@@ -122,13 +115,14 @@ vtkImageData* CalcDensCalcPoint::calcImageData(){
 		esl.logMessage(buffer);
 	}*/
 
+	return imageData;
+}
 
+void CalcDensCalcPoint::cleanupData(){
 	CalcDensCalcPoint::deleteDeviceMoleculeData();
 	CalcDensCalcPoint::deleteDeviceOrbitalData();
-
+	cudaFree(deviceResults);
 	delete[] results;
-	
-	return imageData;
 }
 
 CalcDensCalcPoint::CalcDensCalcPoint(CalcDensDataPack *data): CalcDensCudaFunction(data){
