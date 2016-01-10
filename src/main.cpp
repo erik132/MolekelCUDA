@@ -48,9 +48,6 @@
 #include "Commands.h"
 
 
-//debugInclude
-#include "ESLogger.h"
-
 /// Settings prefixes
 static const char ORGANIZATION[] = "CSCS";
 static const char ORGANIZATION_DOMAIN[] = "cscs.com";
@@ -120,8 +117,6 @@ void ExecuteCommandLine( int argc, char** argv, MainWindow* w )
 /// proper window initialization before sending events.
 int main(int argc, char *argv[])
 {
-	ESLogger esl("debugLog.txt");
-	esl.logMessage("program started");
     try
     {
         QCoreApplication::setOrganizationName( ORGANIZATION );

@@ -985,13 +985,12 @@ vtkImageData* MolekelMolecule::GenerateMOGridData( int orbitalIndex,
                                                    ProgressCallback cb,
                                                    void* cbData ) const
 {
-	ESLogger esl("GenerateMOGridData.txt");
-	esl.logMessage("starting function");
+	
     int ftype = CALC_ORB; // use EL_DENS for density matrix
     float dim[6];
 //    int   ncub[3];
     molOrb = &GetOrbital( orbitalIndex, molekelMol_ );
-	esl.logMessage("orbital received");
+	
     double x, y, z;
     GetIsoBoundingBoxCenter( x, y, z );
     dim[ 0 ] =  float( x - bboxSize[ 0 ] * .5 );
@@ -1000,10 +999,10 @@ vtkImageData* MolekelMolecule::GenerateMOGridData( int orbitalIndex,
     dim[ 3 ] =  float( y + bboxSize[ 1 ] * .5 );
     dim[ 4 ] =  float( z - bboxSize[ 2 ] * .5 );
     dim[ 5 ] =  float( z + bboxSize[ 2 ] * .5 );
-	esl.logMessage("bounding box and floats received");
+	
     vtkImageData* data =
         vtk_process_calc( molekelMol_, dim, steps, ftype, cb, cbData );
-	esl.logMessage("vtk process calculated");
+	
     if( data == 0 ) throw MolekelException( "Error computing Molecular Orbital" );
 
     return data;
@@ -1040,26 +1039,22 @@ bool MolekelMolecule::AddOrbitalSurface( int orbitalIndex,
                                          ProgressCallback cb,
                                          void* cbData )
 {
-	ESLogger esl("AddOrbitalSurface.txt");
-	esl.logMessage("starting AddOrbitalSurface function");
+	
     // check if index is valid
     GetOrbital( orbitalIndex, molekelMol_ );
-	esl.logMessage("getting orbital");
+	
     // check if orbital already in map
     if( orbitalActorMap_.find( orbitalIndex ) != orbitalActorMap_.end() ) return false;
 
     SaveTransform(); // push current transform
     ResetTransform(); // set to default (identity)
 	
-	esl.logMessage("save and reset transform done");
     // create surface from data
     vtkSmartPointer< vtkActor > minusActor( 0 );
     vtkSmartPointer< vtkActor > zeroActor( 0 );
     vtkSmartPointer< vtkActor > plusActor( 0 );
-	esl.logMessage("the three actors created");
     vtkSmartPointer< vtkImageData > data(
                         GenerateMOGridData( orbitalIndex, bboxSize, steps, cb, cbData ) );
-	esl.logMessage("MO mgrid data created");
 
     if( !bothSigns )
     {
@@ -1082,7 +1077,6 @@ bool MolekelMolecule::AddOrbitalSurface( int orbitalIndex,
          // zeroActor = GenerateMOActor( data, value );
          // how do we clone a vtkActor ?
     }
-	esl.logMessage("bothsigns and nodalSurface passed");
     vtkSmartPointer< vtkAssembly > assembly( vtkAssembly::New() );
 
     int typeMask = 0;
@@ -1101,7 +1095,6 @@ bool MolekelMolecule::AddOrbitalSurface( int orbitalIndex,
     	typeMask |= ORBITAL_PLUS;
     	assembly->AddPart( plusActor );
     }
-	esl.logMessage("typemasks and actors pased");
     if( GLSLShadersSupported() ) // in this case the actors are vtkGLSLShaderActors
     {
         vtkGLSLShaderActor* ma = dynamic_cast< vtkGLSLShaderActor* >( minusActor.GetPointer() );
@@ -1123,7 +1116,6 @@ bool MolekelMolecule::AddOrbitalSurface( int orbitalIndex,
             pa->SetShaderProgramId( shaderSurfaceMap_[ ORBITAL_POSITIVE_SURFACE ].program );
         }
     }
-	esl.logMessage("shaders and surface maps passed");
 
 
     if( minusActor != 0 ||
@@ -1142,7 +1134,6 @@ bool MolekelMolecule::AddOrbitalSurface( int orbitalIndex,
     {
         return false;
     }
-	esl.logMessage("minus actors finished");
 }
 
 //--------------------------------------------------------------------------------

@@ -194,21 +194,21 @@ private slots:
     /// Called when generate button pressed.
     void GenerateSlot()
     {
-		ESLogger eslogger("debugLog.txt");
-		eslogger.logMessage("generate pressed");
+		
+		
     	StopProcessing();
-		eslogger.logMessage("stopped processing");
+		
         ProgressCallback pcb = MainWindow::ProgressCallback;
-		eslogger.logMessage("progress called back");
+		
         if( !useDensityMatrix_ )
         {
-			eslogger.logMessage("we are not using density");
+			
             if( selectedOrbital_ < 0 ) return;
             if( mol_->HasOrbitalSurface( selectedOrbital_ ) )
             {
                 mol_->RemoveOrbitalSurface( selectedOrbital_ );
             }
-			eslogger.logMessage("orbital surfaces removed");
+			
             double value, bboxSize[ 3 ];
             int steps[ 3 ];
             bool bothSigns;
@@ -220,7 +220,7 @@ private slots:
             double pTr  = 0.; // positive transparency
             if( !ow_->GetData( value, bboxSize, steps, bothSigns, nodalSurface,
             				   rs, dmTr, nTr, noTr, pTr ) ) return;
-			eslogger.logMessage("ow getData received");
+			
             if( mol_->AddOrbitalSurface( selectedOrbital_,
                                          bboxSize,
                                          steps,
@@ -230,12 +230,12 @@ private slots:
                                          pcb,
                                          mw_ ) )
             {
-				eslogger.logMessage("added orbital surfaces");
+				
                 mol_->SetOrbitalRenderingStyle( selectedOrbital_, rs );
                 mol_->SetOrbitalOpacity( selectedOrbital_, 1.0 - nTr, MolekelMolecule::ORBITAL_MINUS );
                 mol_->SetOrbitalOpacity( selectedOrbital_, 1.0 - noTr, MolekelMolecule::ORBITAL_NODAL );
                 mol_->SetOrbitalOpacity( selectedOrbital_, 1.0 - pTr, MolekelMolecule::ORBITAL_PLUS );
-				eslogger.logMessage("orbital opacities set");
+				
                 if( mapMEP_ )
                 {
                     MapMEPOnOrbitalSurface( steps, bboxSize );
@@ -253,7 +253,7 @@ private slots:
                 c = ow_->GetPositiveOrbitalColor(); 
                 QColorToRgb( c, color );
                 mol_->SetOrbitalColor( selectedOrbital_, MolekelMolecule::ORBITAL_PLUS, color ); 
-				eslogger.logMessage("orbital colors set");
+				
             }
             else
             {

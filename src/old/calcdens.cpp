@@ -470,11 +470,6 @@ vtkImageData* vtk_process_calc( Mol *mol,
   for (i=0, z=dim[4]; i<ncub[2]; i++, z += dz) {
    for (j=0, y=dim[2]; j<ncub[1]; j++, y += dy) {
 	for (k=0, x=dim[0]; k<ncub[0]; k++, x += dx) {
-		/*if(i==0 && j==0 && k==0){
-			comparisonMoment = true;
-		}else{
-			comparisonMoment = false;
-		}*/
       const double s = (*funct)(mol, x, y, z);
 	  /*if(i < 5 && j <5 && k<5){
 		sprintf(buffer, "x: %d y: %d z: %d value is %.15f", k, j, i, s);
@@ -487,8 +482,8 @@ vtkImageData* vtk_process_calc( Mol *mol,
       if( s > maxValue ) maxValue = s;
       image->SetScalarComponentFromDouble( k, j, i, 0, s );
 
-	  /*sprintf(buffer, "old molekel: %.15f new molekel: %.15f", image->GetScalarComponentAsDouble(k, j, i, 0), cudaImage->GetScalarComponentAsDouble(k, j, i, 0));
-		esl.logMessage(buffer);*/
+	  sprintf(buffer, "old molekel: %.15f new molekel: %.15f", image->GetScalarComponentAsDouble(k, j, i, 0), cudaImage->GetScalarComponentAsDouble(k, j, i, 0));
+		esl.logMessage(buffer);
       if( stop == true ) goto stopped; // forward jump to stopped label
     }
    }
