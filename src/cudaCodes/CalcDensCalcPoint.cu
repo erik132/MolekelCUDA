@@ -18,7 +18,6 @@ __global__ void calcPoint(CudaMolecule *molecule, CalcDensInternalData internalD
 		z = internalData.dim4 + indexZ*internalData.dz;
 		
 		result = calcChiCalcPoint(orbital, molecule, x, y, z);
-
 		results[indexX + (internalData.ncub0*indexY) + (internalData.ncub0*internalData.ncub1*indexZ)] = result;
 	}
 	
@@ -57,22 +56,16 @@ cudaError_t CalcDensCalcPoint::initData(){
 vtkImageData* CalcDensCalcPoint::runComputation(){
 	
 	ESLogger esl("CudaCalcDensCalcPoint.txt");
-	esl.logMessage("function started");
 	cudaError_t status;
 	int i, j, k, counter;
 	char buffer[100];
 	vtkImageData* imageData;
-	GpuTimer gputimer;
 	
 	dim3 blockSize(BLOCK_DIM,BLOCK_DIM,BLOCK_DIM);
 	dim3 gridSize = getGridSize();
 
 	
-	gputimer.Start();
 	calcPoint<<<gridSize, blockSize>>>(deviceMolecule, calcData, deviceOrbital, deviceResults);
-	gputimer.Stop();
-	sprintf(buffer, "kernel run time: %f", gputimer.Elapsed());
-	esl.logMessage(buffer);
 
 	status = cudaGetLastError();
 	if(status != cudaSuccess){
@@ -90,30 +83,18 @@ vtkImageData* CalcDensCalcPoint::runComputation(){
 		sprintf(buffer, "memcpy from device failed, errorcode %s", cudaGetErrorString(status));
 		esl.logMessage(buffer);
 	}
-	cudaFree(deviceResults);
 	
 	imageData = initImageData();
 	counter = 0;
 	for (i=0; i<calcData.ncub2; i++) {
 		for (j=0; j<calcData.ncub1; j++) {
 			for (k=0; k<calcData.ncub0; k++) {
-
 				imageData->SetScalarComponentFromDouble( k, j, i, 0, results[counter] );
 				counter++;
 
 			}
 		}
 	}
-
-	/*for(i=0; i<cudaMolecule.nBasisFunctions; i++){
-		sprintf(buffer, "nr: %d value is %.15f",  i, hostChi[i]);
-		esl.logMessage(buffer);
-	}*/
-
-	/*for(i=0; i<resultsLength; i++){
-		sprintf(buffer, "nr %d value is %.15f", i, results[i]);
-		esl.logMessage(buffer);
-	}*/
 
 	return imageData;
 }

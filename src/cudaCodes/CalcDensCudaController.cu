@@ -82,27 +82,27 @@ void CalcDensCudaController::getSpinDensityFunction(CalcDensDataPack *data){
 
 vtkImageData* CalcDensCudaController::vtkProcessCalc(CalcDensDataPack *data){
 	
-	ESLogger esl("CalcDensCudaController.txt");
-	GpuTimer gputimer;
+	//ESLogger esl("CalcDensCudaController.txt");
+	//GpuTimer gputimer;
 	char buffer[100];
 	vtkImageData *returnData;
 
 
-	esl.logMessage("function started");
+	//esl.logMessage("function started");
 	calcFunction = NULL;
 	switch(data->key) {
 	   case CALC_ORB  :
-		   esl.logMessage("using key CALC_ORB");
+		   //esl.logMessage("using key CALC_ORB");
 			CalcDensCudaController::getOrbitalFunction(data);
 		break;
 
 	   case EL_DENS :
-		   esl.logMessage("using key EL_DENS");
+		   //esl.logMessage("using key EL_DENS");
 			CalcDensCudaController::getElectroDensityFunction(data);
 		break;
 
 	   case SPIN_DENS :
-		   esl.logMessage("using key SPIN_DENS");
+		   //esl.logMessage("using key SPIN_DENS");
 		   CalcDensCudaController::getSpinDensityFunction(data);
 		break;
 
@@ -117,16 +117,16 @@ vtkImageData* CalcDensCudaController::vtkProcessCalc(CalcDensDataPack *data){
 		esl.logMessage("data pac molecule was NOT NULL");
 	}*/
 	if (calcFunction != NULL){
-		esl.logMessage("calcFunction is not NULL");
-		gputimer.Start();
+		/*esl.logMessage("calcFunction is not NULL");
+		gputimer.Start();*/
 		returnData = calcFunction->calcImageData();
-		gputimer.Stop();
+		/*gputimer.Stop();
 		sprintf(buffer,"total gpu elapsed time: %f",gputimer.Elapsed());
-		esl.logMessage(buffer);
+		esl.logMessage(buffer);*/
 		return returnData;
 		
 	}else{
-		esl.logMessage("calcFunction is NULL");
+		//esl.logMessage("calcFunction is NULL");
 		return NULL;
 	}
 }

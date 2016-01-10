@@ -264,8 +264,8 @@ vtkImageData* vtk_process_calc( Mol *mol,
                                                          void* cbackData ) = 0,
                                 void* cbackData = 0 )
 {
-	ESLogger esl("vtk_process_calc.txt");
-	esl.logMessage("function started");
+	//ESLogger esl("vtk_process_calc.txt");
+	//esl.logMessage("function started");
   stop = false;
   float x, y, z, dx, dy, dz;
   short i, j, k;
@@ -283,13 +283,7 @@ vtkImageData* vtk_process_calc( Mol *mol,
   if(CHECK_SIZE > mol->nBasisFunctions) CHECK_SIZE = mol->nBasisFunctions;
 
   type = -1;
-  esl.logMessage("starting controller test");
   
-  if(mol==NULL){
-	  esl.logMessage("Molecule was null");
-  }else{
-	  esl.logMessage("Molecule was not null");
-  }
 
   double (*funct)(Mol *mol, float x, float y, float z);
 
@@ -309,9 +303,6 @@ vtkImageData* vtk_process_calc( Mol *mol,
   ncub[1] = *ncubes++;
   ncub[2] = *ncubes++;
 
-
-
-	esl.logMessage("initial vodoo executed");
   // UV why do we need alha/beta orbital information when key == MEP ?
   if( key != MEP )
   {
@@ -330,20 +321,18 @@ vtkImageData* vtk_process_calc( Mol *mol,
 		  return 0;
 	  }
   } // if( key != MEP )
+
 	cudaImage = cudaService.vtkProcessCalc(&dataPack);
-  if(cudaImage==NULL){
-	  esl.logMessage("controller tested");
-  }else{
-	  esl.logMessage("controller did not return null");
-	  //return cudaImage;
+  if(cudaImage != NULL){
+	  //esl.logMessage("controller did not return null");
+	  return cudaImage;
   }
-  esl.logMessage("alhpaorbitals set");
   switch(key) {
    case CALC_ORB  :
     switch(mol->alphaOrbital[0].flag) {
       case GAMESS_ORB :
       case HONDO_ORB  :
-	  case GAUSS_ORB  : esl.logMessage("function calc_point activated"); 
+	  case GAUSS_ORB  : //esl.logMessage("function calc_point activated"); 
 		  funct = calc_point; break;
   /* to be fixed
           case ADF_ORB_A  :
@@ -353,9 +342,9 @@ vtkImageData* vtk_process_calc( Mol *mol,
   */
       case MOS_ORB   :
       case ZINDO_ORB  :
-	  case PRDDO_ORB  : esl.logMessage("function calc_prddo_point activated");
+	  case PRDDO_ORB  : //esl.logMessage("function calc_prddo_point activated");
 		  funct = calc_prddo_point; break;
-	  case MLD_SLATER_ORB  : esl.logMessage("function calc_sltr_point activated");
+	  case MLD_SLATER_ORB  : //esl.logMessage("function calc_sltr_point activated");
 		  funct = calc_sltr_point; break;
     }
     break;
@@ -372,7 +361,7 @@ vtkImageData* vtk_process_calc( Mol *mol,
        }
        else {
         printf("density matrix generated...\n");
-		esl.logMessage("function calculate_density activated first occasion");
+		//esl.logMessage("function calculate_density activated first occasion");
 		/*for(i=0; i<mol->nBasisFunctions; i++){
 			for(j=0; j<=i; j++){
 				sprintf(buffer, "matrix point at %d %d value: %f", i, j, density[i][j]);
@@ -400,11 +389,11 @@ vtkImageData* vtk_process_calc( Mol *mol,
       case MOS_ORB   :
       case ZINDO_ORB  :
       case PRDDO_ORB  : 
-		  esl.logMessage("function calc_prddo_density activated");
+		  //esl.logMessage("function calc_prddo_density activated");
 		  funct = calc_prddo_density; 
 	  break;
       case MLD_SLATER_ORB  : 
-		  esl.logMessage("function calc_sltr_density activated");
+		  //esl.logMessage("function calc_sltr_density activated");
 		  funct = calc_sltr_density; 
 	  break;
     }
@@ -425,7 +414,7 @@ vtkImageData* vtk_process_calc( Mol *mol,
        }
        else {
         printf("density matrix generated...\n");
-		esl.logMessage("function calculate_density activated second occasion");
+		//esl.logMessage("function calculate_density activated second occasion");
         funct = calculate_density;
        }
        break;
@@ -445,7 +434,6 @@ vtkImageData* vtk_process_calc( Mol *mol,
     break;
   }
 
-  esl.logMessage("a really long switch exxecuted");
 
   dx = (dim[1]-dim[0])/(ncub[0]-1);
   dy = (dim[3]-dim[2])/(ncub[1]-1);
@@ -453,17 +441,16 @@ vtkImageData* vtk_process_calc( Mol *mol,
   len = 4*ncub[0]*ncub[1];
 	
 	
-	sprintf(buffer, "image data: ncub0 %d, ncub1 %d, ncub2 %d, dim0 %f, dim2 %f, dim4 %f, dx %f, dy %f, dz %f, nBasis Functions %d", 
+	/*sprintf(buffer, "image data: ncub0 %d, ncub1 %d, ncub2 %d, dim0 %f, dim2 %f, dim4 %f, dx %f, dy %f, dz %f, nBasis Functions %d", 
 		ncub[0], ncub[1], ncub[2], dim[0], dim[2], dim[4], dx, dy,dz, mol->nBasisFunctions);
 	esl.logMessage(buffer);
-	elapsedTime = clock();
+	elapsedTime = clock();*/
   vtkSmartPointer< vtkImageData > image( vtkImageData::New() );
   image->SetDimensions( ncub[ 0 ], ncub[ 1 ], ncub[ 2 ] );
   image->SetOrigin( dim[0],
                     dim[2],
                     dim[4] );
   image->SetSpacing( dx, dy, dz );
-	esl.logMessage("image initialized");
 	
   const int totalSteps = ncub[ 0 ] * ncub[ 1 ] * ncub[ 2 ];
   if( progressCBack ) progressCBack( 0, totalSteps, cbackData );
@@ -471,26 +458,16 @@ vtkImageData* vtk_process_calc( Mol *mol,
    for (j=0, y=dim[2]; j<ncub[1]; j++, y += dy) {
 	for (k=0, x=dim[0]; k<ncub[0]; k++, x += dx) {
       const double s = (*funct)(mol, x, y, z);
-	  /*if(i < 5 && j <5 && k<5){
-		sprintf(buffer, "x: %d y: %d z: %d value is %.15f", k, j, i, s);
-		esl.logMessage(buffer);
-	  }
-	  sprintf(buffer, "nr: %d value is %.15f", resultCounter, s);
-		esl.logMessage(buffer);
-	resultCounter++;*/
       if( s < minValue ) minValue = s;
       if( s > maxValue ) maxValue = s;
       image->SetScalarComponentFromDouble( k, j, i, 0, s );
-
-	  sprintf(buffer, "old molekel: %.15f new molekel: %.15f", image->GetScalarComponentAsDouble(k, j, i, 0), cudaImage->GetScalarComponentAsDouble(k, j, i, 0));
-		esl.logMessage(buffer);
+	  /*sprintf(buffer, "old molekel: %.15f new molekel: %.15f", image->GetScalarComponentAsDouble(k, j, i, 0), cudaImage->GetScalarComponentAsDouble(k, j, i, 0));
+		esl.logMessage(buffer);*/
       if( stop == true ) goto stopped; // forward jump to stopped label
     }
    }
- //esl.logMessage("nested loop execution ended without stop");
 // Execution will jump to this label iff stop requested   
 stopped: 
-	//esl.logMessage("nested loop execution ended with stop");
    const int idx = ncub[ 0 ] * ncub[ 1 ] * ( i + 1 );
    // invoke progress callback function.
    if( progressCBack ) progressCBack( idx, totalSteps, cbackData );
@@ -508,18 +485,16 @@ stopped:
      chi = NULL;
   }
   type = key;
-  elapsedTime = clock() - elapsedTime;
+  /*elapsedTime = clock() - elapsedTime;
   floatTime = ((float)elapsedTime)/CLOCKS_PER_SEC;
   sprintf(buffer,"calcdens elapsed time: %f", floatTime);
-  esl.logMessage(buffer);
+  esl.logMessage(buffer);*/
   return image;
 }
 
 //-----------------------------------------------------------------------------
 void process_calc(Mol *mol, const char *s, float *dim, int *ncubes, int key)
 {
-	ESLogger esl("process_calc.txt");
-	esl.logMessage("function started");
   float x, y, z, dx, dy, dz;
   float **slice, *array;
   short i, j, k;
@@ -757,14 +732,14 @@ double calculate_density(Mol *mol, float x, float y, float z)
 {
   register short i, j;
   double value;
-  ESLogger esl("calcdens-calculate_density.txt");
-  char buffer[1000];
+  /*ESLogger esl("calcdens-calculate_density.txt");
+  char buffer[1000];*/
 
   value = 0;
   calc_chi(mol, x, y, z);
-	sprintf(buffer, "result check %d value: %.15f", cudaGlobalCounter, chi[500]);
+	/*sprintf(buffer, "result check %d value: %.15f", cudaGlobalCounter, chi[500]);
 	esl.logMessage(buffer);
-	cudaGlobalCounter++;
+	cudaGlobalCounter++;*/
 
   for(i=0; i<mol->nBasisFunctions; i++){
     value += density[i][i] * chi[i] * chi[i];
@@ -1158,8 +1133,6 @@ double calc_prddo_point(Mol *mol, float x, float y, float z)
 //  Slater *vp;
   double value, *ao_coeff, angular_part;
   float xa, ya, za, ra2, ra;  /* atomic units !! */
-	ESLogger esl("calcdens-calc_prddo_point.txt");
-	esl.logMessage("function activated");
 
   value = 0;
   ao_coeff = molOrb->coefficient;
@@ -1270,8 +1243,6 @@ double calc_sltr_point(Mol *mol, float x, float y, float z)
 {
   float xa, ya, za, ra2, ra;
   double value = 0, exponent = 0, *ao_coeff;
-  ESLogger esl("calcdens-calc_sltr_point");
-  esl.logMessage("function activated");
 
   ao_coeff = molOrb->coefficient;
 

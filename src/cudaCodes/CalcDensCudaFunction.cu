@@ -14,8 +14,8 @@ vtkImageData* CalcDensCudaFunction::initImageData(){
 
 CalcDensCudaFunction::CalcDensCudaFunction(CalcDensDataPack *data){
 	
-	ESLogger esl("CalcDensCudaFunction.txt");
-	esl.logMessage("function started");
+	/*ESLogger esl("CalcDensCudaFunction.txt");
+	esl.logMessage("function started");*/
 	BLOCK_DIM = 5;
 
 	densityMatrix = NULL;
@@ -29,27 +29,18 @@ CalcDensCudaFunction::CalcDensCudaFunction(CalcDensDataPack *data){
 	calcData.dim0 = data->dim[0];
 	calcData.dim2 = data->dim[2];
 	calcData.dim4 = data->dim[4];
-	esl.logMessage("starting to cpy datasource");
+	//esl.logMessage("starting to cpy datasource");
 	calcData.datasource = data->datasource;
 
 	calcData.dx = (data->dim[1] - data->dim[0]) / (calcData.ncub0 - 1);
 	calcData.dy = (data->dim[3] - data->dim[2]) / (calcData.ncub1 - 1);
 	calcData.dz = (data->dim[5] - data->dim[4]) / (calcData.ncub2 - 1);
-	esl.logMessage("starting to cpy mol and key");
+	//esl.logMessage("starting to cpy mol and key");
 	this->mol = data->mol;
 	this->key = data->key;
-	esl.logMessage("mol and key cpy success");
+	//esl.logMessage("mol and key cpy success");
 
-	if(data->mol == NULL){
-		esl.logMessage("data pack mol is NULL");
-	}else{
-		esl.logMessage("data pac mol is not NULL");
-	}
-
-	if(data->orbital == NULL){
-		esl.logMessage("data pack molecularOrbital is NULL");
-	}else{
-		esl.logMessage("data pac molecularOrbital is not NULL");
+	if(data->orbital != NULL){
 		cudaOrbital.setProperties(data->orbital,data->mol);
 	}
 	cudaMolecule.setProperties(data->mol);
