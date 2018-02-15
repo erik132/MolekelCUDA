@@ -1,9 +1,8 @@
 #include "ESLogger.h"
-#include <stdio.h>
 #include <string.h>
 #include <time.h>
 
-
+double ESLogger::ElDensityStep = 0;
 
 ESLogger::ESLogger(char *name){
     strcpy(ESLogger::filename,name);
@@ -18,4 +17,17 @@ void ESLogger::logMessage(char *msg){
     fprintf(file,msg);
     fprintf(file,"\n");
     fclose(file);
+}
+
+void ESLogger::open(){
+	this->pureFile = fopen(ESLogger::filename, "a");
+}
+
+void ESLogger::logPure(char *msg){
+	fprintf(this->pureFile,msg);
+	fprintf(this->pureFile,"\n");
+}
+
+void ESLogger::close(){
+	fclose(this->pureFile);
 }

@@ -264,8 +264,10 @@ vtkImageData* vtk_process_calc( Mol *mol,
                                                          void* cbackData ) = 0,
                                 void* cbackData = 0 )
 {
-	//ESLogger esl("vtk_process_calc.txt");
-	//esl.logMessage("function started");
+	ESLogger esl("vtk_process_calc.txt");
+	esl.logMessage("function started");
+	ESLogger dtvFile("surface.dtv");
+	
   stop = false;
   float x, y, z, dx, dy, dz;
   short i, j, k;
@@ -283,7 +285,8 @@ vtkImageData* vtk_process_calc( Mol *mol,
   if(CHECK_SIZE > mol->nBasisFunctions) CHECK_SIZE = mol->nBasisFunctions;
 
   type = -1;
-  
+
+  dtvFile.open();
 
   double (*funct)(Mol *mol, float x, float y, float z);
 
@@ -361,7 +364,7 @@ vtkImageData* vtk_process_calc( Mol *mol,
        }
        else {
         printf("density matrix generated...\n");
-		//esl.logMessage("function calculate_density activated first occasion");
+		esl.logMessage("function calculate_density activated first occasion");
 		/*for(i=0; i<mol->nBasisFunctions; i++){
 			for(j=0; j<=i; j++){
 				sprintf(buffer, "matrix point at %d %d value: %f", i, j, density[i][j]);
@@ -414,7 +417,7 @@ vtkImageData* vtk_process_calc( Mol *mol,
        }
        else {
         printf("density matrix generated...\n");
-		//esl.logMessage("function calculate_density activated second occasion");
+		esl.logMessage("function calculate_density activated second occasion");
         funct = calculate_density;
        }
        break;
@@ -461,6 +464,8 @@ vtkImageData* vtk_process_calc( Mol *mol,
       if( s < minValue ) minValue = s;
       if( s > maxValue ) maxValue = s;
       image->SetScalarComponentFromDouble( k, j, i, 0, s );
+	  sprintf(buffer,"%.10f\t%.10f\t%.10f\t%.4f\t%.10f ",x,y,z,0.098,s);
+	  dtvFile.logPure(buffer);
 	  /*sprintf(buffer, "old molekel: %.15f new molekel: %.15f", image->GetScalarComponentAsDouble(k, j, i, 0), cudaImage->GetScalarComponentAsDouble(k, j, i, 0));
 		esl.logMessage(buffer);*/
       if( stop == true ) goto stopped; // forward jump to stopped label
@@ -485,6 +490,7 @@ stopped:
      chi = NULL;
   }
   type = key;
+  dtvFile.close();
   /*elapsedTime = clock() - elapsedTime;
   floatTime = ((float)elapsedTime)/CLOCKS_PER_SEC;
   sprintf(buffer,"calcdens elapsed time: %f", floatTime);

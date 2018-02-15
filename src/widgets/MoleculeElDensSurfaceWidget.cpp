@@ -49,6 +49,7 @@
 #include "../MolekelMolecule.h"
 #include "MoleculeElDensSurfaceWidget.h"
 #include "../utility/RAII.h"
+#include "../ESLogger.h"
 
 const QString MoleculeElDensSurfaceWidget::POSITIVE_ORBITAL_COLOR_KEY = 
 	"gui/eldens_surface_widget/positive_orbital_color";
@@ -84,6 +85,7 @@ const QString MoleculeElDensSurfaceWidget::BBOX_DY_KEY =
 const QString MoleculeElDensSurfaceWidget::BBOX_DZ_KEY = 
 	"gui/eldens_surface_widget/bbox_dz";
 #endif
+
 
 
 //------------------------------------------------------------------------------
@@ -151,7 +153,7 @@ void MoleculeElDensSurfaceWidget::CreateGUI()
     valueSpinBox_ = new QDoubleSpinBox;
     const double value = s.value( ISOVALUE_KEY, 0.05 ).toDouble();
     valueSpinBox_->setValue( value );
-    valueSpinBox_->setSingleStep( 0.01 );
+    valueSpinBox_->setSingleStep( 0.001 );
     valueSpinBox_->setDecimals( 4 );
     connect( valueSpinBox_, SIGNAL( valueChanged( double ) ),
              this, SLOT( ComputeSteps() ) );
@@ -262,6 +264,9 @@ void MoleculeElDensSurfaceWidget::CreateGUI()
     stepSizeSpinBox_ = new QDoubleSpinBox;
     const double sstep = s.value( STEP_SIZE_KEY, 0.25 ).toDouble();
     stepSizeSpinBox_->setSingleStep( 0.025 );
+	//0.098 experiment
+	stepSizeSpinBox_->setSingleStep( 0.001 );
+    stepSizeSpinBox_->setDecimals( 4 );
     stepSizeSpinBox_->setValue( sstep );
     connect( stepSizeSpinBox_, SIGNAL( valueChanged( double ) ),
              this, SLOT( ComputeSteps() ) );
@@ -428,6 +433,7 @@ void MoleculeElDensSurfaceWidget::ComputeSteps()
                                      dzSpinBox_->value() );
     }
     if( !updatingGUI_ ) emit ValuesChanged();
+	ESLogger::ElDensityStep = stepSizeSpinBox_->value();
 }
 
 //------------------------------------------------------------------------------
