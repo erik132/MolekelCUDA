@@ -279,6 +279,7 @@ vtkImageData* vtk_process_calc( Mol *mol,
   float floatTime;
   char buffer[1000];
   cudaGlobalCounter = 0;
+  int counter = 0, densitySize = (mol->nBasisFunctions*(mol->nBasisFunctions+1))/2*sizeof(float);
 
   int CHECK_SIZE = 200;
   float checkSum = 0;
@@ -365,7 +366,10 @@ vtkImageData* vtk_process_calc( Mol *mol,
        else {
         printf("density matrix generated...\n");
 		esl.logMessage("function calculate_density activated first occasion");
-		
+		for(counter=0; counter<densitySize; counter++){
+			sprintf(buffer, "nr %d is %f", counter, density[0][counter]);
+			esl.logMessage(buffer);
+		}
         funct = calculate_density;
        }
        break;
@@ -405,6 +409,7 @@ vtkImageData* vtk_process_calc( Mol *mol,
        else {
         printf("density matrix generated...\n");
 		esl.logMessage("function calculate_density activated second occasion");
+		
         funct = calculate_density;
        }
        break;
@@ -451,8 +456,8 @@ vtkImageData* vtk_process_calc( Mol *mol,
       if( s < minValue ) minValue = s;
       if( s > maxValue ) maxValue = s;
       image->SetScalarComponentFromDouble( k, j, i, 0, s );
-	  sprintf(buffer,"%.10f\t%.10f\t%.10f\t%.4f\t%.10f ",x,y,z,0.098,s);
-	  dtvFile.logPure(buffer);
+	  //sprintf(buffer,"%.10f\t%.10f\t%.10f\t%.4f\t%.10f ",x,y,z,0.098,s);
+	  //dtvFile.logPure(buffer);
 	  /*sprintf(buffer, "old molekel: %.15f new molekel: %.15f", image->GetScalarComponentAsDouble(k, j, i, 0), cudaImage->GetScalarComponentAsDouble(k, j, i, 0));
 		esl.logMessage(buffer);*/
       if( stop == true ) goto stopped; // forward jump to stopped label

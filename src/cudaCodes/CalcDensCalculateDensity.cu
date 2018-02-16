@@ -4,16 +4,14 @@
 
 #include "gputimer.h"
 
-__global__ void checkDensityMatrix(float* densities, float* resultArray){
-	int idx = threadIdx.x;
-	int i;
-	float result = 0;
-	densities = densities + (idx*(idx+1))/2;
+__global__ void checkDensityMatrix(float* densities, double* resultArray, int densityLength){
+	int i=0;
+	//densities = densities + (idx*(idx+1))/2;
 
-	for(i=0; i<=idx; i++){
-		result += densities[i];
+	for(i=0; i<=50; i++){
+		resultArray[i] = densities[i];
 	}
-	resultArray[idx] = result;
+	
 }
 
 
@@ -50,6 +48,7 @@ cudaError_t CalcDensCalculateDensity::initData(){
 		this->esl->logMessage("can not create density matrix.");
 		return cudaErrorMemoryAllocation;
 	}
+	
 
 	status = this->densityMatrixToDevice();
 	if(status != cudaSuccess){
@@ -62,6 +61,42 @@ cudaError_t CalcDensCalculateDensity::initData(){
 }
 
 vtkImageData* CalcDensCalculateDensity::runComputation(){
+	char buffer[100];
+	dim3 blockSize(1,1,1);
+	dim3 gridSize(1,1,1);
+	cudaError_t status;
+	int i=0;
+
+	sprintf(buffer, "Density matrix has %d elems and is %d bytes long",this->densityMatrixLength, sizeof(float)*this->densityMatrixLength);
+	this->esl->logMessage(buffer);
+
+	checkDensityMatrix<<<blockSize, gridSize>>>(this->deviceDensityMatrix,this->deviceResults,this->densityMatrixLength);
+
+	status = cudaGetLastError();
+	if(status != cudaSuccess){
+		sprintf(buffer, "kernel launch failed, errorcode %s", cudaGetErrorString(status));
+		this->esl->logMessage(buffer);
+		return NULL;
+	}
+
+	status = cudaDeviceSynchronize();
+	if(status != cudaSuccess){
+		sprintf(buffer, "failed to sync devices %s", cudaGetErrorString(status));
+		this->esl->logMessage(buffer);
+		return NULL;
+	}
+
+	status = cudaMemcpy(results,deviceResults,resultsLength*sizeof(double),cudaMemcpyDeviceToHost);
+	if(status != cudaSuccess){
+		sprintf(buffer, "results copy back to host failed, errorcode %s", cudaGetErrorString(status));
+		this->esl->logMessage(buffer);
+		return NULL;
+	}
+
+	for(i=0; i<this->densityMatrixLength; i++){
+		sprintf(buffer, "nr %d is %f", i, this->results[i]);
+		this->esl->logMessage(buffer);
+	}
 
 	return NULL;
 }
