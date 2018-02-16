@@ -365,20 +365,7 @@ vtkImageData* vtk_process_calc( Mol *mol,
        else {
         printf("density matrix generated...\n");
 		esl.logMessage("function calculate_density activated first occasion");
-		/*for(i=0; i<mol->nBasisFunctions; i++){
-			for(j=0; j<=i; j++){
-				sprintf(buffer, "matrix point at %d %d value: %f", i, j, density[i][j]);
-				esl.logMessage(buffer);
-		  }
-		}*/
-		/*for(i=0; i<CHECK_SIZE; i++){
-			checkSum = 0;
-			for(j=0; j<=i; j++){
-				checkSum += density[i][j];
-			}
-			sprintf(buffer, "check sum at %d value: %f", i, checkSum);
-			esl.logMessage(buffer);
-		}*/
+		
         funct = calculate_density;
        }
        break;
@@ -399,7 +386,7 @@ vtkImageData* vtk_process_calc( Mol *mol,
 		  //esl.logMessage("function calc_sltr_density activated");
 		  funct = calc_sltr_density; 
 	  break;
-    }
+    }  // end of switch(mol->alphaOrbital[0].flag)
     break;
 
    case SPIN_DENS :

@@ -5,6 +5,7 @@
 
 #include "CalcDensCudaFunction.cuh"
 #include "CalcDensDataPack.h"
+#include "CalcDensCalculateDensity.cuh"
 
 #include "../ESLogger.h"
 

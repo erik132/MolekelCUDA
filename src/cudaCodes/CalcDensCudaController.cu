@@ -9,7 +9,7 @@ void CalcDensCudaController::getOrbitalFunction(CalcDensDataPack *data){
 		  case GAMESS_ORB :
 		  case HONDO_ORB  :
 		  case GAUSS_ORB  : 
-			  CalcDensCudaController::calcFunction = new CalcDensCalcPoint(data); 
+			  this->calcFunction = new CalcDensCalcPoint(data); 
 			break;
 
 		  case MOS_ORB   :
@@ -27,17 +27,8 @@ void CalcDensCudaController::getElectroDensityFunction(CalcDensDataPack *data){
 	  case GAMESS_ORB :
 	  case HONDO_ORB  :
 	  case GAUSS_ORB  :
-	  //CalcDensCudaController::calcFunction = new CalcDensCalculateDensity(data);
-	   /*if (!generate_density_matrix(mol, key)) {
-		fprintf(stderr, "Can't generate the density matrix!\n");
-		strcpy(timestring, "Can't generate the density matrix!");
-		CalcDensCudaController::calcFunction = NULL;
-	   }
-	   else {
-		printf("density matrix generated...\n");
-		esl.logMessage("function calculate_density activated");
-		funct = calculate_density;
-	   }*/
+	  this->calcFunction = new CalcDensCalculateDensity(data);
+	   
 	   break;
 
 
@@ -93,17 +84,17 @@ vtkImageData* CalcDensCudaController::vtkProcessCalc(CalcDensDataPack *data){
 	switch(data->key) {
 	   case CALC_ORB  :
 		   //esl.logMessage("using key CALC_ORB");
-			CalcDensCudaController::getOrbitalFunction(data);
+			this->getOrbitalFunction(data);
 		break;
 
 	   case EL_DENS :
 		   //esl.logMessage("using key EL_DENS");
-			CalcDensCudaController::getElectroDensityFunction(data);
+			this->getElectroDensityFunction(data);
 		break;
 
 	   case SPIN_DENS :
 		   //esl.logMessage("using key SPIN_DENS");
-		   CalcDensCudaController::getSpinDensityFunction(data);
+		   this->getSpinDensityFunction(data);
 		break;
 
 	   case MEP :
