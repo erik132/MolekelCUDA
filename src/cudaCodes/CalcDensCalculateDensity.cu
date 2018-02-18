@@ -91,7 +91,7 @@ vtkImageData* CalcDensCalculateDensity::runComputation(){
 	sprintf(buffer, "Density matrix has %d elems and is %d bytes long",calcData.densityLength, sizeof(float)*calcData.densityLength);
 	this->esl->logMessage(buffer);
 
-	calculateDensity<<<blockSize, gridSize>>>(this->deviceMolecule,this->calcData,this->deviceOrbital,this->deviceDensityMatrix, this->deviceResults);
+	calculateDensity<<<gridSize, blockSize>>>(this->deviceMolecule,this->calcData,this->deviceOrbital,this->deviceDensityMatrix, this->deviceResults);
 
 	status = cudaGetLastError();
 	if(status != cudaSuccess){
