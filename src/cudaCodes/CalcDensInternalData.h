@@ -6,6 +6,6 @@ struct CalcDensInternalData{
 	float dx, dy, dz;
 	double minValue, maxValue;
 	int datasource;
-	int densityLength;
+	int densityLength; //nr of elements in density matrix
 
 };

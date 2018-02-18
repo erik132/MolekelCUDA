@@ -44,7 +44,7 @@ CalcDensCudaFunction::CalcDensCudaFunction(CalcDensDataPack *data){
 		cudaOrbital.setProperties(data->orbital,data->mol);
 	}
 	cudaMolecule.setProperties(data->mol);
-	
+	calcData.densityLength = 0;
 
 	
 }
@@ -248,7 +248,7 @@ cudaError_t CalcDensCudaFunction::densityMatrixToDevice(){
 	status = cudaMalloc(&deviceDensityMatrix, densityMatrixLength);
 	if(status != cudaSuccess) return status;
 	status = cudaMemcpy(deviceDensityMatrix, densityMatrix[0], densityMatrixLength, cudaMemcpyHostToDevice);
-	
+	calcData.densityLength = densityMatrixLength/sizeof(float);
 	return status;
 
 }

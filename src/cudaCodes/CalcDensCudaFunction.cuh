@@ -36,7 +36,7 @@ protected:
 	int BLOCK_DIM;
 	float **densityMatrix;
 	float *deviceDensityMatrix;
-	int densityMatrixLength;
+	int densityMatrixLength; //density matrix length in bytes
 	Molecule *mol;
 	int key;
 	
