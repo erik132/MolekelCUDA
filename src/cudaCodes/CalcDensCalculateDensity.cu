@@ -27,7 +27,7 @@ __global__ void calculateDensity(CudaMolecule *molecule, CalcDensInternalData in
 		y = internalData.dim2 + indexY*internalData.dy;
 		z = internalData.dim4 + indexZ*internalData.dz;
 		
-		result = calcChiCalculateDensity(orbital, molecule, x, y, z);
+		result = calcChiCalculateDensity(densities,orbital, molecule, x, y, z);
 		results[indexX + (internalData.ncub0*indexY) + (internalData.ncub0*internalData.ncub1*indexZ)] = result;
 	}
 }
@@ -80,15 +80,18 @@ cudaError_t CalcDensCalculateDensity::initData(){
 
 vtkImageData* CalcDensCalculateDensity::runComputation(){
 	char buffer[100];
-	dim3 blockSize(1,1,1);
-	dim3 gridSize(1,1,1);
 	cudaError_t status;
-	int i=0;
+	int i, j, k, counter=0;
+	vtkImageData* imageData;
 
-	sprintf(buffer, "Density matrix has %d elems and is %d bytes long",this->densityMatrixLength, sizeof(float)*this->densityMatrixLength);
+
+	dim3 blockSize(BLOCK_DIM,BLOCK_DIM,BLOCK_DIM);
+	dim3 gridSize = getGridSize();
+
+	sprintf(buffer, "Density matrix has %d elems and is %d bytes long",calcData.densityLength, sizeof(float)*calcData.densityLength);
 	this->esl->logMessage(buffer);
 
-	checkDensityMatrix<<<blockSize, gridSize>>>(this->deviceDensityMatrix,this->deviceResults,this->densityMatrixLength);
+	calculateDensity<<<blockSize, gridSize>>>(this->deviceMolecule,this->calcData,this->deviceOrbital,this->deviceDensityMatrix, this->deviceResults);
 
 	status = cudaGetLastError();
 	if(status != cudaSuccess){
@@ -111,12 +114,24 @@ vtkImageData* CalcDensCalculateDensity::runComputation(){
 		return NULL;
 	}
 
-	for(i=0; i<this->densityMatrixLength; i++){
-		sprintf(buffer, "nr %d is %f", i, this->results[i]);
+	/*for(i=0; i<resultsLength; i++){
+		sprintf(buffer, "result nr %d is %.15f", i, results[i]);
 		this->esl->logMessage(buffer);
+	}*/
+
+	imageData = initImageData();
+	counter = 0;
+	for (i=0; i<calcData.ncub2; i++) {
+		for (j=0; j<calcData.ncub1; j++) {
+			for (k=0; k<calcData.ncub0; k++) {
+				imageData->SetScalarComponentFromDouble( k, j, i, 0, results[counter] );
+				counter++;
+
+			}
+		}
 	}
 
-	return NULL;
+	return imageData;
 }
 
 void CalcDensCalculateDensity::cleanupData(){

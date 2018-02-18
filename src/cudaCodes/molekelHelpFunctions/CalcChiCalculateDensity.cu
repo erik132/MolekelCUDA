@@ -9,7 +9,7 @@
 #include "cuda_runtime.h"
 #include "device_launch_parameters.h"
 
-static __device__ double calcChiCalculateDensity(CudaMolecularOrbital *orbital, CudaMolecule *molecule, float x, float y, float z){
+static __device__ double calcChiCalculateDensity(float * densities, CudaMolecularOrbital *orbital, CudaMolecule *molecule, float x, float y, float z){
 
 	
 	double radial_part;
@@ -17,11 +17,11 @@ static __device__ double calcChiCalculateDensity(CudaMolecularOrbital *orbital, 
 	int atom, shell, gauss, i;
 	int diagIndex=0; //index of the final element in the row
 	int	rowElem=0; //which element are we currently refering to
+	int densityIndex =0;
 
 	const int atomsSize = molecule->atomsSize;
 	int shellsSize, gaussSize, count=0;
 	Gauss tempGauss;
-	double density = 1.0;
 
 	double cp[10], result = 0; //temporary cells will be used to gather gaussian calculations in them to later add them to the result.
 	
@@ -139,12 +139,14 @@ static __device__ double calcChiCalculateDensity(CudaMolecularOrbital *orbital, 
 			for(i=0; i<count; i++){
 				if(rowElem == diagIndex){
 					result *= cp[i];
-					result += density * cp[i] * cp[i];
+					result += densities[densityIndex] * cp[i] * cp[i];
 					rowElem=0;
 					diagIndex++;
+					densityIndex++;
 				}else{
-					result += density * cp[i] * 2.0;
+					result += densities[densityIndex] * cp[i] * 2.0;
 					rowElem++;
+					densityIndex++;
 				}
 			}
 
