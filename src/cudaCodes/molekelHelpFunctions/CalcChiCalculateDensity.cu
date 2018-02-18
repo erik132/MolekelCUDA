@@ -23,7 +23,7 @@ static __device__ double calcChiCalculateDensity(float * densities, CudaMolecula
 	int shellsSize, gaussSize, count=0;
 	Gauss tempGauss;
 
-	double cp[10], result = 0; //temporary cells will be used to gather gaussian calculations in them to later add them to the result.
+	double cp[10], result = 0, tempResult = 0; //temporary cells will be used to gather gaussian calculations in them to later add them to the result.
 	
 	
 	for (atom=0; atom<atomsSize; atom++) {
@@ -138,13 +138,14 @@ static __device__ double calcChiCalculateDensity(float * densities, CudaMolecula
 			} /* end of switch */
 			for(i=0; i<count; i++){
 				if(rowElem == diagIndex){
-					result *= cp[i];
+					result += cp[i] * tempResult;
 					result += densities[densityIndex] * cp[i] * cp[i];
 					rowElem=0;
 					diagIndex++;
 					densityIndex++;
+					tempResult = 0;
 				}else{
-					result += densities[densityIndex] * cp[i] * 2.0;
+					tempResult += densities[densityIndex] * cp[i] * 2.0;
 					rowElem++;
 					densityIndex++;
 				}
