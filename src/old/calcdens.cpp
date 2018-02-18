@@ -366,10 +366,6 @@ vtkImageData* vtk_process_calc( Mol *mol,
        else {
         printf("density matrix generated...\n");
 		esl.logMessage("function calculate_density activated first occasion");
-		for(counter=0; counter<densitySize; counter++){
-			sprintf(buffer, "nr %d is %f", counter, density[0][counter]);
-			esl.logMessage(buffer);
-		}
         funct = calculate_density;
        }
        break;

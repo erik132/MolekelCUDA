@@ -1,6 +1,6 @@
 #include "CalcDensCalculateDensity.cuh"
 
-#include "molekelHelpFunctions/CalcChi.cu"
+#include "molekelHelpFunctions/CalcChiCalculateDensity.cu"
 
 #include "gputimer.h"
 
@@ -12,6 +12,24 @@ __global__ void checkDensityMatrix(float* densities, double* resultArray, int de
 		resultArray[i] = densities[i];
 	}
 	
+}
+
+__global__ void calculateDensity(CudaMolecule *molecule, CalcDensInternalData internalData, CudaMolecularOrbital *orbital, float *densities, double *results){
+	double result = 0;
+	int indexZ = threadIdx.z + (blockDim.z*blockIdx.z);
+	int	indexY = threadIdx.y + (blockDim.y*blockIdx.y);
+	int	indexX = threadIdx.x + (blockDim.x*blockIdx.x);
+	float x,y,z;
+
+	if(indexX < internalData.ncub0 && indexY < internalData.ncub1 && indexZ < internalData.ncub2){
+		
+		x = internalData.dim0 + indexX*internalData.dx;
+		y = internalData.dim2 + indexY*internalData.dy;
+		z = internalData.dim4 + indexZ*internalData.dz;
+		
+		result = calcChiCalculateDensity(orbital, molecule, x, y, z);
+		results[indexX + (internalData.ncub0*indexY) + (internalData.ncub0*internalData.ncub1*indexZ)] = result;
+	}
 }
 
 
