@@ -241,11 +241,11 @@ void CalcDensCudaFunction::deleteDensityMatrix(){
 }
 
 cudaError_t CalcDensCudaFunction::densityMatrixToDevice(){
-
+	
 	densityMatrixLength = (mol->nBasisFunctions*(mol->nBasisFunctions+1))/2*sizeof(float);
 	cudaError_t status;
 
-	status = cudaMalloc(&deviceDensityMatrix, densityMatrixLength);
+	status = cudaMalloc((void**)&deviceDensityMatrix, densityMatrixLength);
 	if(status != cudaSuccess) return status;
 	status = cudaMemcpy(deviceDensityMatrix, densityMatrix[0], densityMatrixLength, cudaMemcpyHostToDevice);
 	calcData.densityLength = densityMatrixLength/sizeof(float);

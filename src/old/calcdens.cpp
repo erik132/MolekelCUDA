@@ -200,6 +200,7 @@ double calc_sltr_spindensity(Mol *mol, float x, float y, float z);
 double calc_sltr_density(Mol *mol, float x, float y, float z);
 double calc_prddo_point(Mol *mol, float x, float y, float z);
 double calculate_density(Mol *mol, float x, float y, float z);
+double calculate_density2(Mol *mol, float x, float y, float z);
 int generate_density_matrix(Mol *mol, int key);
 double calculateSomo(Mol *mol, float x, float y, float z);
 extern void *alloc_trimat(int n, size_t size);
@@ -724,26 +725,71 @@ double calculateSomo(Mol *mol, float x, float y, float z)
 double calculate_density(Mol *mol, float x, float y, float z)
 /* calculate the electron or spin density at given point */
 {
-  register short i, j;
-  double value;
-  /*ESLogger esl("calcdens-calculate_density.txt");
-  char buffer[1000];*/
+	register short i, j;
+	double value;
+	/*ESLogger esl("calcdens-calculate_density.txt");
+	char buffer[1000];*/
 
-  value = 0;
-  calc_chi(mol, x, y, z);
+	value = 0;
+	calc_chi(mol, x, y, z);
 	/*sprintf(buffer, "result check %d value: %.15f", cudaGlobalCounter, chi[500]);
 	esl.logMessage(buffer);
 	cudaGlobalCounter++;*/
 
-  for(i=0; i<mol->nBasisFunctions; i++){
-    value += density[i][i] * chi[i] * chi[i];
-    for(j=0; j<i; j++)
-      value += density[i][j] * chi[i] * chi[j] * 2.0;
-  }
+	for(i=0; i<mol->nBasisFunctions; i++){
+	value += density[i][i] * chi[i] * chi[i];
+	for(j=0; j<i; j++)
+		value += density[i][j] * chi[i] * chi[j] * 2.0;
+	}
 
-  return value;
+	return value;
 }
 
+double calculate_density2(Mol *mol, float x, float y, float z)
+/* calculate the electron or spin density at given point */
+{
+	register short i, j;
+	double value, tempValue =0;
+	ESLogger esl("calcdens-calculate_density.txt");
+	char buffer[200];
+
+
+	value = 0;
+	calc_chi(mol, x, y, z);
+
+	if(cudaGlobalCounter==0){
+		/*for(i=0; i<mol->nBasisFunctions; i++){
+			for(j=0; j<i; j++){
+				sprintf(buffer, "density nr %d and %d is %.15f", i,j, density[i][j]);
+				esl.logMessage(buffer);
+			}
+			sprintf(buffer, "density nr %d and %d is %.15f", i,i, density[i][i]);
+			esl.logMessage(buffer);
+		}*/
+		for(i=0; i<100; i++){
+			sprintf(buffer, "density nr %d is %.15f", i, density[0][i]);
+			esl.logMessage(buffer);
+		}
+	}
+	cudaGlobalCounter++;
+
+	for(i=0; i<mol->nBasisFunctions; i++){
+	  for(j=0; j<i; j++){
+		tempValue += density[i][j] * chi[j] * 2.0;
+	  }
+	  value += tempValue * chi[i];
+	  value += density[i][i] * chi[i] * chi[i];
+	  tempValue=0;
+	}
+
+	/*for(i=0; i<mol->nBasisFunctions; i++){
+	value += density[i][i] * chi[i] * chi[i];
+	for(j=0; j<i; j++)
+	  value += density[i][j] * chi[i] * chi[j] * 2.0;
+	}*/
+
+	return value;
+}
 
 
 
