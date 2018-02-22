@@ -9,7 +9,7 @@
 #include "cuda_runtime.h"
 #include "device_launch_parameters.h"
 
-static __device__ double calcChiCalculateDensity(float * densities, CudaMolecularOrbital *orbital, CudaMolecule *molecule, float x, float y, float z, double* results){
+static __device__ double calcChiCalculateDensity(float * densities, CudaMolecularOrbital *orbital, CudaMolecule *molecule, float x, float y, float z, int densityLength){
 
 	
 	double radial_part;
@@ -137,32 +137,38 @@ static __device__ double calcChiCalculateDensity(float * densities, CudaMolecula
 				break;
 
 			} /* end of switch */
+			
 			for(i=0; i<count; i++){
 				if(rowElem == diagIndex){
-					result += cp[i] * tempResult;
-					result += densities[densityIndex] * cp[i] * cp[i];
+					//result += cp[i] * tempResult;
+					//result += densities[densityIndex] * cp[i] * cp[i];
+					result += tempResult;
+					result += 1;
+					//result += densities[densityIndex];
 					rowElem=0;
 					diagIndex++;
 					densityIndex++;
 					tempResult = 0;
 					break;
 				}else{
-					tempResult += densities[densityIndex] * cp[i] * 2.0;
+					//tempResult += densities[densityIndex] * cp[i] * 2.0;
+					//tempResult += densities[densityIndex];
+					tempResult += 1;
 					rowElem++;
 					densityIndex++;
 				}
 			}
-
+			
 			for(i=0; i<count; i++){
 				cp[i] = 0;
 			}
 			count = 0;
 			if(rowElem == 0){
-				atom = 0;
+				atom = -1;
 				break;
 			}
 		} /* end of loop over the shells (for(sp...) */
-		if(densityIndex >= molecule->nBasisFunctions * molecule->nBasisFunctions){
+		if(densityIndex >= densityLength){
 			break;
 		}
 	} /* end of loop over the atoms (for(ap...)*/

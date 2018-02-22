@@ -27,7 +27,7 @@ __global__ void calculateDensity(CudaMolecule *molecule, CalcDensInternalData in
 		y = internalData.dim2 + indexY*internalData.dy;
 		z = internalData.dim4 + indexZ*internalData.dz;
 		
-		result = calcChiCalculateDensity(densities,orbital, molecule, x, y, z,results);
+		result = calcChiCalculateDensity(densities,orbital, molecule, x, y, z, internalData.densityLength);
 		results[indexX + (internalData.ncub0*indexY) + (internalData.ncub0*internalData.ncub1*indexZ)] = result;
 	}
 }
@@ -94,6 +94,9 @@ vtkImageData* CalcDensCalculateDensity::runComputation(){
 	sprintf(buffer, "Density matrix has %d elems and is %d bytes long",calcData.densityLength, sizeof(float)*calcData.densityLength);
 	this->esl->logMessage(buffer);
 
+	sprintf(buffer, "Molecule has %d n basis functions",this->mol->nBasisFunctions);
+	this->esl->logMessage(buffer);
+
 	calculateDensity<<<gridSize, blockSize>>>(this->deviceMolecule,this->calcData,this->deviceOrbital,this->deviceDensityMatrix, this->deviceResults);
 
 	status = cudaGetLastError();
@@ -129,7 +132,6 @@ vtkImageData* CalcDensCalculateDensity::runComputation(){
 			for (k=0; k<calcData.ncub0; k++) {
 				imageData->SetScalarComponentFromDouble( k, j, i, 0, results[counter] );
 				counter++;
-
 			}
 		}
 	}

@@ -367,7 +367,7 @@ vtkImageData* vtk_process_calc( Mol *mol,
        else {
         printf("density matrix generated...\n");
 		esl.logMessage("function calculate_density activated first occasion");
-        funct = calculate_density;
+        funct = calculate_density2;
        }
        break;
 
@@ -751,42 +751,37 @@ double calculate_density2(Mol *mol, float x, float y, float z)
 	register short i, j;
 	double value, tempValue =0;
 	ESLogger esl("calcdens-calculate_density.txt");
-	char buffer[200];
+	char buffer[1000];
 
 
+	double result=0, tempResult=0;
 	value = 0;
 	calc_chi(mol, x, y, z);
 
-	if(cudaGlobalCounter==0){
-		/*for(i=0; i<mol->nBasisFunctions; i++){
-			for(j=0; j<i; j++){
-				sprintf(buffer, "density nr %d and %d is %.15f", i,j, density[i][j]);
-				esl.logMessage(buffer);
-			}
-			sprintf(buffer, "density nr %d and %d is %.15f", i,i, density[i][i]);
-			esl.logMessage(buffer);
-		}*/
-		for(i=0; i<100; i++){
-			sprintf(buffer, "density nr %d is %.15f", i, density[0][i]);
-			esl.logMessage(buffer);
-		}
-	}
-	cudaGlobalCounter++;
 
 	for(i=0; i<mol->nBasisFunctions; i++){
-	  for(j=0; j<i; j++){
-		tempValue += density[i][j] * chi[j] * 2.0;
-	  }
-	  value += tempValue * chi[i];
-	  value += density[i][i] * chi[i] * chi[i];
-	  tempValue=0;
+		for(j=0; j<i; j++){
+			//tempResult += density[i][j];
+			tempResult++;
+		}
+		result += tempResult;
+		//result += density[i][i];
+		result++;
+		tempResult=0;
 	}
+	sprintf(buffer, "part result nr %d is %.15f",cudaGlobalCounter,result);
+	esl.logMessage(buffer);
+	cudaGlobalCounter++;
+	
 
-	/*for(i=0; i<mol->nBasisFunctions; i++){
-	value += density[i][i] * chi[i] * chi[i];
-	for(j=0; j<i; j++)
-	  value += density[i][j] * chi[i] * chi[j] * 2.0;
-	}*/
+	for(i=0; i<mol->nBasisFunctions; i++){
+		for(j=0; j<i; j++){
+			tempValue += density[i][j] * chi[j] * 2.0;
+		}
+		value += tempValue * chi[i];
+		value += density[i][i] * chi[i] * chi[i];
+		tempValue=0;
+	}
 
 	return value;
 }
