@@ -142,9 +142,6 @@ static __device__ double calcChiCalculateDensity(float * densities, CudaMolecula
 				if(rowElem == diagIndex){
 					result += cp[i] * tempResult;
 					result += densities[densityIndex] * cp[i] * cp[i];
-					//result += tempResult;
-					//result += 1;
-					//result += densities[densityIndex];
 					rowElem=0;
 					diagIndex++;
 					densityIndex++;
@@ -152,8 +149,6 @@ static __device__ double calcChiCalculateDensity(float * densities, CudaMolecula
 					break;
 				}else{
 					tempResult += densities[densityIndex] * cp[i] * 2.0;
-					//tempResult += densities[densityIndex];
-					//tempResult += 1;
 					rowElem++;
 					densityIndex++;
 				}

@@ -102,11 +102,6 @@ vtkImageData* CalcDensCudaController::vtkProcessCalc(CalcDensDataPack *data){
 		break;
 	  }
 
-	/*if(calcFunction->getDataPack()->mol == NULL){
-		esl.logMessage("data pack molecule was NULL");
-	}else{
-		esl.logMessage("data pac molecule was NOT NULL");
-	}*/
 	if (calcFunction != NULL){
 		/*esl.logMessage("calcFunction is not NULL");
 		gputimer.Start();*/
@@ -117,7 +112,6 @@ vtkImageData* CalcDensCudaController::vtkProcessCalc(CalcDensDataPack *data){
 		return returnData;
 		
 	}else{
-		//esl.logMessage("calcFunction is NULL");
 		return NULL;
 	}
 }

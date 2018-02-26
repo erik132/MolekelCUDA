@@ -200,7 +200,6 @@ double calc_sltr_spindensity(Mol *mol, float x, float y, float z);
 double calc_sltr_density(Mol *mol, float x, float y, float z);
 double calc_prddo_point(Mol *mol, float x, float y, float z);
 double calculate_density(Mol *mol, float x, float y, float z);
-double calculate_density2(Mol *mol, float x, float y, float z);
 int generate_density_matrix(Mol *mol, int key);
 double calculateSomo(Mol *mol, float x, float y, float z);
 extern void *alloc_trimat(int n, size_t size);
@@ -455,8 +454,8 @@ vtkImageData* vtk_process_calc( Mol *mol,
       image->SetScalarComponentFromDouble( k, j, i, 0, s );
 	  //sprintf(buffer,"%.10f\t%.10f\t%.10f\t%.4f\t%.10f ",x,y,z,0.098,s);
 	  //dtvFile.logPure(buffer);
-	  sprintf(buffer, "old molekel: %.15f new molekel: %.15f", image->GetScalarComponentAsDouble(k, j, i, 0), cudaImage->GetScalarComponentAsDouble(k, j, i, 0));
-		esl.logMessage(buffer);
+	  /*sprintf(buffer, "molekel: %.15f cuda molekel: %.15f", image->GetScalarComponentAsDouble(k, j, i, 0), cudaImage->GetScalarComponentAsDouble(k, j, i, 0));
+		esl.logMessage(buffer);*/
       if( stop == true ) goto stopped; // forward jump to stopped label
     }
    }
@@ -740,47 +739,6 @@ double calculate_density(Mol *mol, float x, float y, float z)
 	value += density[i][i] * chi[i] * chi[i];
 	for(j=0; j<i; j++)
 		value += density[i][j] * chi[i] * chi[j] * 2.0;
-	}
-
-	return value;
-}
-
-double calculate_density2(Mol *mol, float x, float y, float z)
-/* calculate the electron or spin density at given point */
-{
-	register short i, j;
-	double value, tempValue =0;
-	ESLogger esl("calcdens-calculate_density.txt");
-	char buffer[1000];
-
-
-	double result=0, tempResult=0;
-	value = 0;
-	calc_chi(mol, x, y, z);
-
-
-	for(i=0; i<mol->nBasisFunctions; i++){
-		for(j=0; j<i; j++){
-			//tempResult += density[i][j];
-			tempResult++;
-		}
-		result += tempResult;
-		//result += density[i][i];
-		result++;
-		tempResult=0;
-	}
-	sprintf(buffer, "part result nr %d is %.15f",cudaGlobalCounter,result);
-	esl.logMessage(buffer);
-	cudaGlobalCounter++;
-	
-
-	for(i=0; i<mol->nBasisFunctions; i++){
-		for(j=0; j<i; j++){
-			tempValue += density[i][j] * chi[j] * 2.0;
-		}
-		value += tempValue * chi[i];
-		value += density[i][i] * chi[i] * chi[i];
-		tempValue=0;
 	}
 
 	return value;
