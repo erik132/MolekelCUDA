@@ -454,8 +454,8 @@ vtkImageData* vtk_process_calc( Mol *mol,
       image->SetScalarComponentFromDouble( k, j, i, 0, s );
 	  //sprintf(buffer,"%.10f\t%.10f\t%.10f\t%.4f\t%.10f ",x,y,z,0.098,s);
 	  //dtvFile.logPure(buffer);
-	  /*sprintf(buffer, "molekel: %.15f cuda molekel: %.15f", image->GetScalarComponentAsDouble(k, j, i, 0), cudaImage->GetScalarComponentAsDouble(k, j, i, 0));
-		esl.logMessage(buffer);*/
+	  sprintf(buffer, "molekel: %.15f cuda molekel: %.15f", image->GetScalarComponentAsDouble(k, j, i, 0), cudaImage->GetScalarComponentAsDouble(k, j, i, 0));
+		esl.logMessage(buffer);
       if( stop == true ) goto stopped; // forward jump to stopped label
     }
    }

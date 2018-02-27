@@ -15,12 +15,11 @@
 
 
 class CalcDensCalculateDensity: public CalcDensCudaFunction{
-private:
+protected:
 	double *results, *deviceResults;
 	int resultsLength;
 	ESLogger *esl;
 
-protected:
 	virtual cudaError_t initData() override;
 	virtual vtkImageData* runComputation() override;
 	virtual void cleanupData() override;

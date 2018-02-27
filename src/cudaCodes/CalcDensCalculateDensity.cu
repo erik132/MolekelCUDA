@@ -4,11 +4,11 @@
 
 #include "gputimer.h"
 
-__global__ void calculateDensity(CudaMolecule *molecule, CalcDensInternalData internalData, CudaMolecularOrbital *orbital, float *densities, double *results){
+__global__ void calculateDensity(CudaMolecule *molecule, CalcDensInternalData internalData, CudaMolecularOrbital *orbital, float *densities, double *results, int offsetx){
 	double result = 0;
 	int indexZ = threadIdx.z + (blockDim.z*blockIdx.z);
 	int	indexY = threadIdx.y + (blockDim.y*blockIdx.y);
-	int	indexX = threadIdx.x + (blockDim.x*blockIdx.x);
+	int	indexX = threadIdx.x + (blockDim.x*(blockIdx.x + offsetx));
 	float x,y,z;
 
 	if(indexX < internalData.ncub0 && indexY < internalData.ncub1 && indexZ < internalData.ncub2){
@@ -72,11 +72,16 @@ vtkImageData* CalcDensCalculateDensity::runComputation(){
 	char buffer[100];
 	cudaError_t status;
 	int i, j, k, counter=0;
+	int originalGridx;
+	int offsetx=0;
 	vtkImageData* imageData;
 
 
 	dim3 blockSize(BLOCK_DIM,BLOCK_DIM,BLOCK_DIM);
 	dim3 gridSize = getGridSize();
+	
+	originalGridx = gridSize.x;
+	gridSize = this->limitGridX(10000,gridSize);
 
 	sprintf(buffer, "Density matrix has %d elems and is %d bytes long",calcData.densityLength, sizeof(float)*calcData.densityLength);
 	this->esl->logMessage(buffer);
@@ -84,7 +89,18 @@ vtkImageData* CalcDensCalculateDensity::runComputation(){
 	sprintf(buffer, "Molecule has %d n basis functions",this->mol->nBasisFunctions);
 	this->esl->logMessage(buffer);
 
-	calculateDensity<<<gridSize, blockSize>>>(this->deviceMolecule,this->calcData,this->deviceOrbital,this->deviceDensityMatrix, this->deviceResults);
+	sprintf(buffer, "Original gridX: %d new gridX: %d",originalGridx, gridSize.x);
+	this->esl->logMessage(buffer);
+	
+	for(offsetx=0; offsetx<originalGridx; offsetx += gridSize.x){
+		calculateDensity<<<gridSize, blockSize>>>(this->deviceMolecule,this->calcData,this->deviceOrbital,this->deviceDensityMatrix, this->deviceResults,offsetx);
+		status = cudaDeviceSynchronize();
+		if(status != cudaSuccess){
+			sprintf(buffer, "failed to sync devices during loop %s", cudaGetErrorString(status));
+			this->esl->logMessage(buffer);
+			return NULL;
+		}
+	}
 
 	status = cudaGetLastError();
 	if(status != cudaSuccess){

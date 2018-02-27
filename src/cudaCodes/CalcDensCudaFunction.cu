@@ -125,6 +125,19 @@ int CalcDensCudaFunction::getSingleGridSize(int elements, int blockSize){
 	return result;
 }
 
+dim3 CalcDensCudaFunction::limitGridX(int maxThreads, dim3 original){
+	int zyPart = original.y * original.z;
+	int newX;
+
+	newX = maxThreads / (zyPart*BLOCK_DIM*BLOCK_DIM*BLOCK_DIM);
+	if(newX <1){
+		newX= 1;
+	}
+	original.x = newX;
+
+	return original;
+}
+
 int CalcDensCudaFunction::createDensityMatrix(){
 	register short i, j, k;
 	float adder;
