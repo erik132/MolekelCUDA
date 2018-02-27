@@ -4,6 +4,21 @@
 
 #include "gputimer.h"
 
+
+#if __CUDA_ARCH__ < 600 
+__device__ double atomicAddLegacy(double* address, double val) { 
+	unsigned long long int* address_as_ull = (unsigned long long int*)address; 
+	unsigned long long int old = *address_as_ull, assumed; 
+	do { 
+		assumed = old; 
+		old = atomicCAS(address_as_ull, assumed, __double_as_longlong(val + __longlong_as_double(assumed))); 
+		// Note: uses integer comparison to avoid hang in case of NaN (since NaN != NaN) 
+	} while (assumed != old); 
+	return __longlong_as_double(old); 
+} 
+#endif
+
+
 __global__ void calculateDensityUnrolled(CudaMolecule *molecule, CalcDensInternalData internalData, CudaMolecularOrbital *orbital, float *densities, double *results){
 	double result = 0;
 	int indexZ = threadIdx.z + (blockDim.z*blockIdx.z);
@@ -22,7 +37,7 @@ __global__ void calculateDensityUnrolled(CudaMolecule *molecule, CalcDensInterna
 		z = internalData.dim4 + indexZ*internalData.dz;
 		
 		result = calcChiCalculateDensityUnrolled(densities,orbital, molecule, x, y, z, internalData.densityLength,rowNr);
-		results[realX + (internalData.ncub0*indexY) + (internalData.ncub0*internalData.ncub1*indexZ)] = result;
+		atomicAddLegacy(&results[realX + (internalData.ncub0*indexY) + (internalData.ncub0*internalData.ncub1*indexZ)], result);
 	}
 }
 
