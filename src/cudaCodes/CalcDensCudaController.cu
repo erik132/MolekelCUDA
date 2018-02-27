@@ -1,7 +1,5 @@
 #include "CalcDensCudaController.cuh"
 #include "gputimer.h"
-#include "CalcDensCalcPoint.cuh"
-//#include "CalcDensCalculateDensity.cuh"
 
 void CalcDensCudaController::getOrbitalFunction(CalcDensDataPack *data){
 
@@ -27,7 +25,7 @@ void CalcDensCudaController::getElectroDensityFunction(CalcDensDataPack *data){
 	  case GAMESS_ORB :
 	  case HONDO_ORB  :
 	  case GAUSS_ORB  :
-	  this->calcFunction = new CalcDensCalculateDensity(data);
+	  this->calcFunction = new CalcDensCalculateDensityUnrolled(data);
 	   
 	   break;
 

@@ -9,6 +9,8 @@
 
 
 class CalcDensCalculateDensityUnrolled: public CalcDensCalculateDensity{
+protected:
+	vtkImageData* runComputation() override;
 
 public:
 	CalcDensCalculateDensityUnrolled(CalcDensDataPack *data);

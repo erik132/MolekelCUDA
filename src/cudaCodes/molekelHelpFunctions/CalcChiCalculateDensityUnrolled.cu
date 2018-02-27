@@ -9,16 +9,14 @@
 #include "cuda_runtime.h"
 #include "device_launch_parameters.h"
 
-static __device__ double calcChiCalculateDensityUnrolled(float * densities, CudaMolecularOrbital *orbital, CudaMolecule *molecule, float x, float y, float z, int densityLength){
+static __device__ double calcChiCalculateDensityUnrolled(float * densities, CudaMolecularOrbital *orbital, CudaMolecule *molecule, float x, float y, float z, int densityLength,int rowNr){
 
 	
 	double radial_part;
 	float xa, ya, za, ra2;  /* atomic units !! */
 	int atom, shell, gauss, i;
-	int diagIndex=0; //index of the final element in the row
 	int	rowElem=0; //which element are we currently refering to
-	int densityIndex =0;
-	int resultCounter =0;
+	int densityIndex = 0;
 
 	const int atomsSize = molecule->atomsSize;
 	int shellsSize, gaussSize, count=0;
@@ -26,6 +24,7 @@ static __device__ double calcChiCalculateDensityUnrolled(float * densities, Cuda
 
 	double cp[10], result = 0, tempResult = 0; //temporary cells will be used to gather gaussian calculations in them to later add them to the result.
 	
+	densityIndex = (rowNr * (rowNr+1))/2;
 	
 	for (atom=0; atom<atomsSize; atom++) {
 		xa = (x - molecule->deviceAtoms[atom].coord[0]) * _1_BOHR;
@@ -138,12 +137,12 @@ static __device__ double calcChiCalculateDensityUnrolled(float * densities, Cuda
 
 			} /* end of switch */
 			
+
 			for(i=0; i<count; i++){
-				if(rowElem == diagIndex){
+				if(rowElem == rowNr){
 					result += cp[i] * tempResult;
 					result += densities[densityIndex] * cp[i] * cp[i];
 					rowElem=0;
-					diagIndex++;
 					densityIndex++;
 					tempResult = 0;
 					break;
@@ -154,16 +153,16 @@ static __device__ double calcChiCalculateDensityUnrolled(float * densities, Cuda
 				}
 			}
 			
+			if(rowElem == 0){
+				break;
+			}
 			for(i=0; i<count; i++){
 				cp[i] = 0;
 			}
 			count = 0;
-			if(rowElem == 0){
-				atom = -1;
-				break;
-			}
+			
 		} /* end of loop over the shells (for(sp...) */
-		if(densityIndex >= densityLength){
+		if(rowElem == 0){
 			break;
 		}
 	} /* end of loop over the atoms (for(ap...)*/

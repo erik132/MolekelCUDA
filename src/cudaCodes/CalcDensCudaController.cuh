@@ -6,6 +6,8 @@
 #include "CalcDensCudaFunction.cuh"
 #include "CalcDensDataPack.h"
 #include "CalcDensCalculateDensity.cuh"
+#include "CalcDensCalculateDensityUnrolled.cuh"
+#include "CalcDensCalcPoint.cuh"
 
 #include "../ESLogger.h"
 

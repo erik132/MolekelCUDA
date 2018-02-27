@@ -1,3 +1,5 @@
+#pragma once
+
 #include <vtkImageData.h>
 #include <vtkSmartPointer.h>
 
