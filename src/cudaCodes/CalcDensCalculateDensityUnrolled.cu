@@ -48,8 +48,11 @@ vtkImageData* CalcDensCalculateDensityUnrolled::runComputation(){
 	int i, j, k, counter=0;
 	vtkImageData* imageData;
 
-	dim3 blockSize(this->mol->nBasisFunctions,1,1);
-	dim3 gridSize(1,1,1);
+	dim3 blockSize = this->getBlockSize();
+	dim3 gridSize = this->getGridSize(blockSize);
+
+	sprintf(buffer, "grid size %d %d %d block size %d %d %d", gridSize.x,gridSize.y,gridSize.z, blockSize.x,blockSize.y,blockSize.z);
+	this->esl->logMessage(buffer);
 
 	calculateDensityUnrolled<<<gridSize, blockSize>>>(this->deviceMolecule,this->calcData,this->deviceOrbital,this->deviceDensityMatrix, this->deviceResults);
 
@@ -91,4 +94,26 @@ vtkImageData* CalcDensCalculateDensityUnrolled::runComputation(){
 
 CalcDensCalculateDensityUnrolled::CalcDensCalculateDensityUnrolled(CalcDensDataPack *data): CalcDensCalculateDensity(data){
 	
+}
+
+
+dim3 CalcDensCalculateDensityUnrolled::getBlockSize(){
+	dim3 result(400,1,1);
+	return result;
+}
+
+dim3 CalcDensCalculateDensityUnrolled::getGridSize(dim3 blockSize){
+	int total, xsize;
+	dim3 result(1,1,1);
+
+	total = this->mol->nBasisFunctions * this->calcData.ncub0;
+	xsize = total/blockSize.x;
+	if(total > xsize * blockSize.x){
+		xsize++;
+	}
+	
+	result.x = xsize;
+	result.y = this->calcData.ncub1;
+	result.z = this->calcData.ncub2;
+	return result;
 }

@@ -9,7 +9,10 @@
 
 
 class CalcDensCalculateDensityUnrolled: public CalcDensCalculateDensity{
+
 protected:
+	dim3 getBlockSize();
+	dim3 getGridSize(dim3 blockSize);
 	vtkImageData* runComputation() override;
 
 public:
