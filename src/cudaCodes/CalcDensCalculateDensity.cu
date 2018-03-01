@@ -81,7 +81,7 @@ vtkImageData* CalcDensCalculateDensity::runComputation(){
 	dim3 gridSize = getGridSize();
 	
 	originalGridx = gridSize.x;
-	gridSize = this->limitGridX(10000,gridSize);
+	gridSize = this->limitThreads(10000,gridSize);
 
 	sprintf(buffer, "Density matrix has %d elems and is %d bytes long",calcData.densityLength, sizeof(float)*calcData.densityLength);
 	this->esl->logMessage(buffer);

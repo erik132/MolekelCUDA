@@ -18,6 +18,10 @@ CalcDensCudaFunction::CalcDensCudaFunction(CalcDensDataPack *data){
 	esl.logMessage("function started");*/
 	BLOCK_DIM = 5;
 
+	calcData.offsetx = 0;
+	calcData.offsety = 0;
+	calcData.offsetz = 0;
+
 	densityMatrix = NULL;
 	calcData.minValue = data->minValue;
 	calcData.maxValue = data->maxValue;
@@ -125,17 +129,31 @@ int CalcDensCudaFunction::getSingleGridSize(int elements, int blockSize){
 	return result;
 }
 
-dim3 CalcDensCudaFunction::limitGridX(int maxThreads, dim3 original){
-	int zyPart = original.y * original.z;
+dim3 CalcDensCudaFunction::limitThreads(int maxThreads, dim3 gridSize){
+	int zyPart = gridSize.y * gridSize.z;
 	int newX;
 
 	newX = maxThreads / (zyPart*BLOCK_DIM*BLOCK_DIM*BLOCK_DIM);
 	if(newX <1){
 		newX= 1;
 	}
-	original.x = newX;
+	gridSize.x = newX;
 
-	return original;
+	return gridSize;
+}
+
+dim3 CalcDensCudaFunction::limitBlocks(int blockLimit, dim3 gridSize){
+	int newX = 0;
+	int zyPart = gridSize.y * gridSize.z;
+
+	newX = blockLimit / zyPart;
+	if(newX < 1){
+		newX = 1;
+	}
+
+	gridSize.x = newX;
+
+	return gridSize;
 }
 
 int CalcDensCudaFunction::createDensityMatrix(){
@@ -273,5 +291,10 @@ vtkImageData* CalcDensCudaFunction::calcImageData(){
 		result = runComputation();
 	}
 	cleanupData();
+	return result;
+}
+
+dim3 CalcDensCudaFunction::getBlockSize(){
+	dim3 result(this->BLOCK_DIM,this->BLOCK_DIM,this->BLOCK_DIM);
 	return result;
 }

@@ -7,5 +7,6 @@ struct CalcDensInternalData{
 	double minValue, maxValue;
 	int datasource;
 	int densityLength; //nr of elements in density matrix
+	int offsetx, offsety, offsetz;
 
 };

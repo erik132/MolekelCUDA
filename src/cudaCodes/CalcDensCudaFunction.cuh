@@ -42,8 +42,10 @@ protected:
 	
 	//methods
 	dim3 getGridSize();
+	dim3 getBlockSize();
 	vtkImageData* initImageData();
-	dim3 limitGridX(int maxThreads, dim3 original);
+	dim3 limitThreads(int maxThreads, dim3 gridSize);
+	dim3 limitBlocks(int blockLimit, dim3 gridSize);
 	virtual cudaError_t initData() = 0;
 	virtual vtkImageData* runComputation() = 0;
 	virtual void cleanupData() = 0;

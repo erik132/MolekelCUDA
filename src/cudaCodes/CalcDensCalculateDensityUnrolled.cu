@@ -23,7 +23,7 @@ __global__ void calculateDensityUnrolled(CudaMolecule *molecule, CalcDensInterna
 	double result = 0;
 	int indexZ = threadIdx.z + (blockDim.z*blockIdx.z);
 	int	indexY = threadIdx.y + (blockDim.y*blockIdx.y);
-	int	indexX = threadIdx.x + (blockDim.x*blockIdx.x);
+	int	indexX = threadIdx.x + (blockDim.x*(blockIdx.x + internalData.offsetx));
 	int realX, rowNr;
 	float x,y,z;
 
@@ -47,29 +47,41 @@ vtkImageData* CalcDensCalculateDensityUnrolled::runComputation(){
 	cudaError_t status;
 	int i, j, k, counter=0;
 	vtkImageData* imageData;
+	int originalx =0;
 
 	dim3 blockSize = this->getBlockSize();
 	dim3 gridSize = this->getGridSize(blockSize);
 
-	sprintf(buffer, "grid size %d %d %d block size %d %d %d", gridSize.x,gridSize.y,gridSize.z, blockSize.x,blockSize.y,blockSize.z);
+	sprintf(buffer, "original grid size %d %d %d block size %d %d %d", gridSize.x,gridSize.y,gridSize.z, blockSize.x,blockSize.y,blockSize.z);
 	this->esl->logMessage(buffer);
 
-	calculateDensityUnrolled<<<gridSize, blockSize>>>(this->deviceMolecule,this->calcData,this->deviceOrbital,this->deviceDensityMatrix, this->deviceResults);
+	originalx = gridSize.x;
+	gridSize = this->limitBlocks(15000,gridSize);
 
 
-	status = cudaGetLastError();
-	if(status != cudaSuccess){
-		sprintf(buffer, "kernel launch failed, errorcode %s", cudaGetErrorString(status));
-		this->esl->logMessage(buffer);
-		return NULL;
+	sprintf(buffer, "grid size %d %d %d block size %d %d %d", gridSize.x,gridSize.y,gridSize.z, blockSize.x,blockSize.y,blockSize.z);
+	this->esl->logMessage(buffer);
+	
+	for(this->calcData.offsetx = 0; this->calcData.offsetx < originalx; this->calcData.offsetx += gridSize.x){
+		calculateDensityUnrolled<<<gridSize, blockSize>>>(this->deviceMolecule,this->calcData,this->deviceOrbital,this->deviceDensityMatrix, this->deviceResults);
+
+		status = cudaGetLastError();
+		if(status != cudaSuccess){
+			sprintf(buffer, "kernel launch failed, errorcode %s", cudaGetErrorString(status));
+			this->esl->logMessage(buffer);
+			return NULL;
+		}
+
+		status = cudaDeviceSynchronize();
+		if(status != cudaSuccess){
+			sprintf(buffer, "failed to sync devices %s", cudaGetErrorString(status));
+			this->esl->logMessage(buffer);
+			return NULL;
+		}
 	}
 
-	status = cudaDeviceSynchronize();
-	if(status != cudaSuccess){
-		sprintf(buffer, "failed to sync devices %s", cudaGetErrorString(status));
-		this->esl->logMessage(buffer);
-		return NULL;
-	}
+
+	
 
 	status = cudaMemcpy(results,deviceResults,resultsLength*sizeof(double),cudaMemcpyDeviceToHost);
 	if(status != cudaSuccess){
@@ -117,3 +129,5 @@ dim3 CalcDensCalculateDensityUnrolled::getGridSize(dim3 blockSize){
 	result.z = this->calcData.ncub2;
 	return result;
 }
+
+
