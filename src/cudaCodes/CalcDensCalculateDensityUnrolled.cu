@@ -38,6 +38,7 @@ __global__ void calculateDensityUnrolled(CudaMolecule *molecule, CalcDensInterna
 		
 		result = calcChiCalculateDensityUnrolled(densities,orbital, molecule, x, y, z, internalData.densityLength,rowNr);
 		atomicAddLegacy(&results[realX + (internalData.ncub0*indexY) + (internalData.ncub0*internalData.ncub1*indexZ)], result);
+		//results[realX + (internalData.ncub0*indexY) + (internalData.ncub0*internalData.ncub1*indexZ)] += result;
 	}
 }
 
@@ -56,7 +57,7 @@ vtkImageData* CalcDensCalculateDensityUnrolled::runComputation(){
 	this->esl->logMessage(buffer);
 
 	originalx = gridSize.x;
-	gridSize = this->limitBlocks(15000,gridSize);
+	gridSize = this->limitBlocks(10000,gridSize);
 
 
 	sprintf(buffer, "grid size %d %d %d block size %d %d %d", gridSize.x,gridSize.y,gridSize.z, blockSize.x,blockSize.y,blockSize.z);
