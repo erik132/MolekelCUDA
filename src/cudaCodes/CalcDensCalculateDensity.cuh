@@ -9,6 +9,7 @@
 
 #include "particleCudaVersions/CudaMolecule.cuh"
 
+#include "gputimer.h"
 #include "cuda_runtime.h"
 #include "device_launch_parameters.h"
 

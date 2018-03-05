@@ -9,7 +9,7 @@
 #include "cuda_runtime.h"
 #include "device_launch_parameters.h"
 
-static __device__ double calcChiCalculateDensityUnrolled(float * densities, CudaMolecularOrbital *orbital, CudaMolecule *molecule, float x, float y, float z, int densityLength,int rowNr){
+static __device__ double calcChiCalculateDensityUnrolled(float * densities, CudaMolecularOrbital *orbital, CudaMolecule *molecule,const float x,const float y,const float z,const int densityLength,int rowNr){
 
 	
 	double radial_part;
@@ -25,6 +25,10 @@ static __device__ double calcChiCalculateDensityUnrolled(float * densities, Cuda
 	double cp[10], result = 0, tempResult = 0; //temporary cells will be used to gather gaussian calculations in them to later add them to the result.
 	
 	densityIndex = (rowNr * (rowNr+1))/2;
+
+	for(i=0; i<10; i++){
+		cp[i] = 0;
+	}
 	
 	for (atom=0; atom<atomsSize; atom++) {
 		xa = (x - molecule->deviceAtoms[atom].coord[0]) * _1_BOHR;

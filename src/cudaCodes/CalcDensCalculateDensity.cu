@@ -2,8 +2,6 @@
 
 #include "molekelHelpFunctions/CalcChiCalculateDensity.cu"
 
-#include "gputimer.h"
-
 __global__ void calculateDensity(CudaMolecule *molecule, CalcDensInternalData internalData, CudaMolecularOrbital *orbital, float *densities, double *results, int offsetx){
 	double result = 0;
 	int indexZ = threadIdx.z + (blockDim.z*blockIdx.z);
@@ -28,10 +26,11 @@ cudaError_t CalcDensCalculateDensity::initData(){
 	char buffer[100];
 	cudaError_t status;
 
+	this->esl->logMessage("starting to init data");
+
 	resultsLength = calcData.ncub0*calcData.ncub1*calcData.ncub2;
 	results = new double[resultsLength];
 
-	this->esl->logMessage("starting to init data");
 	
 	status = this->moleculeToDevice();
 	if(status != cudaSuccess){
@@ -48,6 +47,13 @@ cudaError_t CalcDensCalculateDensity::initData(){
 	status=cudaMalloc((void**)&deviceResults, sizeof(double)*resultsLength);
 	if(status != cudaSuccess){
 		sprintf(buffer, "memory allocation on device failed, errorcode %s", cudaGetErrorString(status));
+		esl->logMessage(buffer);
+		return status;
+	}
+
+	status = cudaMemset(deviceResults,0,sizeof(double)*resultsLength);
+	if(status != cudaSuccess){
+		sprintf(buffer, "can not memset device results to 0, errorcode %s", cudaGetErrorString(status));
 		esl->logMessage(buffer);
 		return status;
 	}

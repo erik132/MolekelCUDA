@@ -17,19 +17,15 @@ __device__ double atomicAddLegacy(double* address, double val) {
 #endif
 
 
-__global__ void calculateDensityUnrolled(CudaMolecule *molecule, CalcDensInternalData internalData, CudaMolecularOrbital *orbital, float *densities, double *results){
+__global__ void calculateDensityUnrolled(CudaMolecule *molecule, const CalcDensInternalData internalData, CudaMolecularOrbital *orbital, float *densities, double *results){
 	double result = 0;
 	int indexZ = threadIdx.z + (blockDim.z*blockIdx.z);
 	int	indexY = threadIdx.y + (blockDim.y*blockIdx.y);
 	int	indexX = threadIdx.x + (blockDim.x*(blockIdx.x + internalData.offsetx));
-	int realX, rowNr;
+	const int rowNr = indexX / internalData.ncub0;
+	const int realX = indexX - (rowNr * internalData.ncub0);
+	
 	float x,y,z;
-
-	//realX = indexX / molecule->nBasisFunctions;
-	//rowNr = indexX - (molecule->nBasisFunctions * realX);
-
-	rowNr = indexX / internalData.ncub0;
-	realX = indexX - (rowNr * internalData.ncub0);
 
 	if(rowNr < molecule->nBasisFunctions && realX < internalData.ncub0 && indexY < internalData.ncub1 && indexZ < internalData.ncub2){
 			
@@ -39,7 +35,6 @@ __global__ void calculateDensityUnrolled(CudaMolecule *molecule, CalcDensInterna
 		
 		result = calcChiCalculateDensityUnrolled(densities,orbital, molecule, x, y, z, internalData.densityLength,rowNr);
 		atomicAddLegacy(&results[realX + (internalData.ncub0*indexY) + (internalData.ncub0*internalData.ncub1*indexZ)], result);
-		//results[realX + (internalData.ncub0*indexY) + (internalData.ncub0*internalData.ncub1*indexZ)] += result;
 	}
 }
 
@@ -92,9 +87,6 @@ vtkImageData* CalcDensCalculateDensityUnrolled::runComputation(){
 		}
 	}
 
-
-	
-
 	status = cudaMemcpy(results,deviceResults,resultsLength*sizeof(double),cudaMemcpyDeviceToHost);
 	if(status != cudaSuccess){
 		sprintf(buffer, "results copy back to host failed, errorcode %s", cudaGetErrorString(status));
@@ -122,7 +114,7 @@ CalcDensCalculateDensityUnrolled::CalcDensCalculateDensityUnrolled(CalcDensDataP
 
 
 dim3 CalcDensCalculateDensityUnrolled::getBlockSize(){
-	dim3 result(400,1,1);
+	dim3 result(125,1,1);
 	return result;
 }
 
