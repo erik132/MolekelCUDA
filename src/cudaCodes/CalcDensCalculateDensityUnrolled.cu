@@ -2,8 +2,6 @@
 
 #include "molekelHelpFunctions/CalcChiCalculateDensityUnrolled.cu"
 
-#include "gputimer.h"
-
 
 #if __CUDA_ARCH__ < 600 
 __device__ double atomicAddLegacy(double* address, double val) { 
@@ -27,10 +25,13 @@ __global__ void calculateDensityUnrolled(CudaMolecule *molecule, CalcDensInterna
 	int realX, rowNr;
 	float x,y,z;
 
-	realX = indexX / molecule->nBasisFunctions;
-	rowNr = indexX - (molecule->nBasisFunctions * realX);
+	//realX = indexX / molecule->nBasisFunctions;
+	//rowNr = indexX - (molecule->nBasisFunctions * realX);
 
-	if(realX < internalData.ncub0 && indexY < internalData.ncub1 && indexZ < internalData.ncub2){
+	rowNr = indexX / internalData.ncub0;
+	realX = indexX - (rowNr * internalData.ncub0);
+
+	if(rowNr < molecule->nBasisFunctions && realX < internalData.ncub0 && indexY < internalData.ncub1 && indexZ < internalData.ncub2){
 			
 		x = internalData.dim0 + realX*internalData.dx;
 		y = internalData.dim2 + indexY*internalData.dy;
@@ -49,11 +50,15 @@ vtkImageData* CalcDensCalculateDensityUnrolled::runComputation(){
 	int i, j, k, counter=0;
 	vtkImageData* imageData;
 	int originalx =0;
+	GpuTimer gputimer;
 
 	dim3 blockSize = this->getBlockSize();
 	dim3 gridSize = this->getGridSize(blockSize);
 
 	sprintf(buffer, "original grid size %d %d %d block size %d %d %d", gridSize.x,gridSize.y,gridSize.z, blockSize.x,blockSize.y,blockSize.z);
+	this->esl->logMessage(buffer);
+
+	sprintf(buffer, "ncubs 0: %d 1: %d 2: %d", this->calcData.ncub0, this->calcData.ncub1, this->calcData.ncub2);
 	this->esl->logMessage(buffer);
 
 	originalx = gridSize.x;
@@ -64,7 +69,13 @@ vtkImageData* CalcDensCalculateDensityUnrolled::runComputation(){
 	this->esl->logMessage(buffer);
 	
 	for(this->calcData.offsetx = 0; this->calcData.offsetx < originalx; this->calcData.offsetx += gridSize.x){
+
+		gputimer.Start();
 		calculateDensityUnrolled<<<gridSize, blockSize>>>(this->deviceMolecule,this->calcData,this->deviceOrbital,this->deviceDensityMatrix, this->deviceResults);
+
+		gputimer.Stop();
+		sprintf(buffer,"offset %d gpu time: %f",this->calcData.offsetx,gputimer.Elapsed());
+		this->esl->logMessage(buffer);
 
 		status = cudaGetLastError();
 		if(status != cudaSuccess){

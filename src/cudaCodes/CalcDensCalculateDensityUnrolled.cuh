@@ -4,12 +4,12 @@
 
 #include "particleCudaVersions/CudaMolecule.cuh"
 
+#include "gputimer.h"
 #include "cuda_runtime.h"
 #include "device_launch_parameters.h"
 
 
 class CalcDensCalculateDensityUnrolled: public CalcDensCalculateDensity{
-
 protected:
 	dim3 getBlockSize();
 	dim3 getGridSize(dim3 blockSize);
