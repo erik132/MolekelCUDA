@@ -266,7 +266,7 @@ vtkImageData* vtk_process_calc( Mol *mol,
 {
 	ESLogger esl("vtk_process_calc.txt");
 	esl.logMessage("function started");
-	ESLogger dtvFile("surface.dtv");
+	
 	
   stop = false;
   float x, y, z, dx, dy, dz;
@@ -287,7 +287,7 @@ vtkImageData* vtk_process_calc( Mol *mol,
 
   type = -1;
 
-  dtvFile.open();
+  
 
   double (*funct)(Mol *mol, float x, float y, float z);
 
@@ -327,10 +327,10 @@ vtkImageData* vtk_process_calc( Mol *mol,
   } // if( key != MEP )
 
 	cudaImage = cudaService.vtkProcessCalc(&dataPack);
-  /*if(cudaImage != NULL){
+  if(cudaImage != NULL){
 	  //esl.logMessage("controller did not return null");
 	  return cudaImage;
-  }*/
+  }
   switch(key) {
    case CALC_ORB  :
     switch(mol->alphaOrbital[0].flag) {
@@ -452,10 +452,8 @@ vtkImageData* vtk_process_calc( Mol *mol,
       if( s < minValue ) minValue = s;
       if( s > maxValue ) maxValue = s;
       image->SetScalarComponentFromDouble( k, j, i, 0, s );
-	  //sprintf(buffer,"%.10f\t%.10f\t%.10f\t%.4f\t%.10f ",x,y,z,0.098,s);
-	  //dtvFile.logPure(buffer);
-	  sprintf(buffer, "x: %d y: %d z: %d molekel: %.15f cuda molekel: %.15f",k,j,i, image->GetScalarComponentAsDouble(k, j, i, 0), cudaImage->GetScalarComponentAsDouble(k, j, i, 0));
-		esl.logMessage(buffer);
+	  /*sprintf(buffer, "x: %d y: %d z: %d molekel: %.15f cuda molekel: %.15f",k,j,i, image->GetScalarComponentAsDouble(k, j, i, 0), cudaImage->GetScalarComponentAsDouble(k, j, i, 0));
+		esl.logMessage(buffer);*/
       if( stop == true ) goto stopped; // forward jump to stopped label
     }
    }
@@ -478,7 +476,6 @@ stopped:
      chi = NULL;
   }
   type = key;
-  dtvFile.close();
   /*elapsedTime = clock() - elapsedTime;
   floatTime = ((float)elapsedTime)/CLOCKS_PER_SEC;
   sprintf(buffer,"calcdens elapsed time: %f", floatTime);

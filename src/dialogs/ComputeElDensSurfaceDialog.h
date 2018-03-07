@@ -194,8 +194,7 @@ private slots:
     /// Called when generate button pressed.
     void GenerateSlot()
     {
-		ESLogger esl("ElDensSurfaceDialog.txt");
-		esl.logMessage("started");
+
     	StopProcessing();
 		
         ProgressCallback pcb = MainWindow::ProgressCallback;
@@ -274,32 +273,29 @@ private slots:
             double noTr = 0.; // nodal transparency
             double pTr  = 0.; // positive transparency
 
-			esl.logMessage("variables declared");
+			
             if( !ow_->GetData( value, bboxSize, steps, bothSigns, nodalSurface, 
             				   rs, dmTr, nTr, noTr, pTr ) ) return;
-			esl.logMessage("ow data got");
+			
             if( mol_->AddElectronDensitySurface( bboxSize,
                                                  steps,
                                                  value,
                                                  pcb,
                                                  mw_ ) )
             {
-				esl.logMessage("added electro dens surface");
+
                 mol_->SetElDensSurfaceRenderingStyle( rs );
                 mol_->SetElDensSurfaceOpacity( 1.0 - dmTr );
-				esl.logMessage("resndering style in place");
                 if( mapMEP_ )
                 {
                     MapMEPOnElDensSurface( steps, bboxSize );
                     mw_->SetMEPScalarBarLUT( mol_->GetElectronDensitySurfaceLUT() );
                 }
-				esl.logMessage("MEP is mapped");
                 removeButton_->setEnabled( true );
                 double color[ 3 ];
                 const QColor c = ow_->GetDensityMatrixColor();
                 QColorToRgb( c, color );
                 mol_->SetElDensSurfaceColor( color );
-				esl.logMessage("el dens surface color set");
             }
             else
             {

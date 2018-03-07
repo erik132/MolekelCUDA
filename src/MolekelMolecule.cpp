@@ -2214,7 +2214,6 @@ namespace
                                   double& minValue, double& maxValue )
     {
 		ESLogger esl("MEPScalars.txt");
-		esl.logMessage("starting");
 		char buffer[200];
 
         assert( pd && "NULL vtkPolyData" );
@@ -2226,17 +2225,18 @@ namespace
         scalars->Allocate( sz );
         minValue = std::numeric_limits< double >::max();
         maxValue = std::numeric_limits< double >::min();
-
+		esl.open();
         for( int i = 0; i != sz; ++i )
         {
             double* p = points->GetPoint( i );
             const double v = calc_mep( mol, &p[ 0 ] );
-			sprintf(buffer, "%.15f %.15f %.15f value: %.15f", p[0], p[1], p[2], v);
-			esl.logMessage(buffer);
+			sprintf(buffer, "%.15f %.15f %.15f 0.098 %.15f", p[0], p[1], p[2], v);
+			esl.logPure(buffer);
             if( v < minValue ) minValue = v;
             if( v > maxValue ) maxValue = v;
             scalars->InsertValue( i, v );
         }
+		esl.close();
         pd->GetPointData()->SetScalars( scalars );
      }
 }
@@ -2248,8 +2248,7 @@ void MolekelMolecule::MapMEPOnSurface( vtkActor* a,
                                        const vtkLookupTable* lut,
                                        bool useGridData ) const
 {
-	ESLogger esl("MapMEPonSurface.txt");
-	esl.logMessage("starting");
+	
     if( a == 0 ) return;
     vtkPolyDataMapper* pdm = dynamic_cast< vtkPolyDataMapper* >( a->GetMapper() );
     assert( pdm && "Wrong vtkMapper type" );
@@ -2259,12 +2258,10 @@ void MolekelMolecule::MapMEPOnSurface( vtkActor* a,
 
     if( useGridData )
     {
-		esl.logMessage("using grid data");
         vtkSmartPointer< vtkImageData > mep = GridDataToVtkImageData( "", 1, 0, 0 );
         MapImageDataToPolyDataScalars( mep, pdm->GetInput(), minv, maxv );
     }
 	else{
-		esl.logMessage("no grid data used");
 		MapMEPToPolyDataScalars( molekelMol_, pdm->GetInput(), minv, maxv );
 	}
     assert( a->GetMapper()->GetLookupTable() && "NULL LUT" );
