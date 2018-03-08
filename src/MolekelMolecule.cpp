@@ -2210,11 +2210,19 @@ namespace
     /// @param pd [in/out] surface to be color coded
     /// @param minValue [out] minimum value of scalar assigned to vertices
     /// @param maxValue [out] maximum value of scalar assigned to vertices
-    void MapMEPToPolyDataScalars( const Molecule* mol, vtkPolyData* pd,
+    void MapMEPToPolyDataScalars(const MolekelMolecule *container, const Molecule* mol, vtkPolyData* pd,
                                   double& minValue, double& maxValue )
     {
-		ESLogger esl("MEPScalars.txt");
 		char buffer[200];
+		
+		strcpy(buffer,container->GetFileName().c_str());
+		char * lastDot = strrchr(buffer,'.');
+		if(lastDot != NULL){
+			strcpy(lastDot,".dtv");
+		}else{
+			strcat(buffer,".dtv");
+		}
+		ESLogger esl(buffer);
 
         assert( pd && "NULL vtkPolyData" );
         assert( mol && "NULL molecule" );
@@ -2262,7 +2270,7 @@ void MolekelMolecule::MapMEPOnSurface( vtkActor* a,
         MapImageDataToPolyDataScalars( mep, pdm->GetInput(), minv, maxv );
     }
 	else{
-		MapMEPToPolyDataScalars( molekelMol_, pdm->GetInput(), minv, maxv );
+		MapMEPToPolyDataScalars(this, molekelMol_, pdm->GetInput(), minv, maxv );
 	}
     assert( a->GetMapper()->GetLookupTable() && "NULL LUT" );
     a->GetMapper()->SetScalarRange( minv, maxv );

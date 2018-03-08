@@ -35,6 +35,8 @@
 #include <map>
 #include <vector>
 
+#include <string.h>
+
 // Forward declaration
 class ChemData;
 class ChemAssociatedData;
