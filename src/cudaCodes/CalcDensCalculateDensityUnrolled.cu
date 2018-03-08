@@ -46,6 +46,7 @@ vtkImageData* CalcDensCalculateDensityUnrolled::runComputation(){
 	vtkImageData* imageData;
 	int originalx =0;
 	GpuTimer gputimer;
+	float elapsed;
 
 	dim3 blockSize = this->getBlockSize();
 	dim3 gridSize = this->getGridSize(blockSize);
@@ -57,7 +58,7 @@ vtkImageData* CalcDensCalculateDensityUnrolled::runComputation(){
 	this->esl->logMessage(buffer);
 
 	originalx = gridSize.x;
-	gridSize = this->limitBlocks(10000,gridSize);
+	gridSize = this->limitBlocks(12000,gridSize);
 
 
 	sprintf(buffer, "grid size %d %d %d block size %d %d %d", gridSize.x,gridSize.y,gridSize.z, blockSize.x,blockSize.y,blockSize.z);
@@ -69,8 +70,13 @@ vtkImageData* CalcDensCalculateDensityUnrolled::runComputation(){
 		calculateDensityUnrolled<<<gridSize, blockSize>>>(this->deviceMolecule,this->calcData,this->deviceOrbital,this->deviceDensityMatrix, this->deviceResults);
 
 		gputimer.Stop();
-		sprintf(buffer,"offset %d gpu time: %f",this->calcData.offsetx,gputimer.Elapsed());
+		elapsed = gputimer.Elapsed();
+		sprintf(buffer,"offset %d gpu time: %f",this->calcData.offsetx,elapsed);
 		this->esl->logMessage(buffer);
+
+		if(elapsed > 1000.0 && gridSize.x > 1){
+			gridSize.x--;
+		}
 
 		status = cudaGetLastError();
 		if(status != cudaSuccess){
