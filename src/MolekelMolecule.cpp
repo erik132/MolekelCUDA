@@ -2214,8 +2214,8 @@ namespace
                                   double& minValue, double& maxValue )
     {
 		char buffer[200];
-		
-		strcpy(buffer,container->GetFileName().c_str());
+		strcpy(buffer,"output/");
+		strcat(buffer,container->GetFileName().c_str());
 		char * lastDot = strrchr(buffer,'.');
 		if(lastDot != NULL){
 			strcpy(lastDot,".dtv");
