@@ -51,18 +51,9 @@ vtkImageData* CalcDensCalculateDensityUnrolled::runComputation(){
 	dim3 blockSize = this->getBlockSize();
 	dim3 gridSize = this->getGridSize(blockSize);
 
-	sprintf(buffer, "original grid size %d %d %d block size %d %d %d", gridSize.x,gridSize.y,gridSize.z, blockSize.x,blockSize.y,blockSize.z);
-	this->esl->logMessage(buffer);
-
-	sprintf(buffer, "ncubs 0: %d 1: %d 2: %d", this->calcData.ncub0, this->calcData.ncub1, this->calcData.ncub2);
-	this->esl->logMessage(buffer);
-
 	originalx = gridSize.x;
-	gridSize = this->limitBlocks(12000,gridSize);
+	gridSize = this->limitBlocks(20000,gridSize);
 
-
-	sprintf(buffer, "grid size %d %d %d block size %d %d %d", gridSize.x,gridSize.y,gridSize.z, blockSize.x,blockSize.y,blockSize.z);
-	this->esl->logMessage(buffer);
 	
 	for(this->calcData.offsetx = 0; this->calcData.offsetx < originalx; this->calcData.offsetx += gridSize.x){
 
@@ -71,8 +62,6 @@ vtkImageData* CalcDensCalculateDensityUnrolled::runComputation(){
 
 		gputimer.Stop();
 		elapsed = gputimer.Elapsed();
-		sprintf(buffer,"offset %d gpu time: %f",this->calcData.offsetx,elapsed);
-		this->esl->logMessage(buffer);
 
 		if(elapsed > 1000.0 && gridSize.x > 1){
 			gridSize.x--;

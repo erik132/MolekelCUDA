@@ -26,8 +26,6 @@ cudaError_t CalcDensCalculateDensity::initData(){
 	char buffer[100];
 	cudaError_t status;
 
-	this->esl->logMessage("starting to init data");
-
 	resultsLength = calcData.ncub0*calcData.ncub1*calcData.ncub2;
 	results = new double[resultsLength];
 
@@ -70,7 +68,6 @@ cudaError_t CalcDensCalculateDensity::initData(){
 		this->esl->logMessage(buffer);
 	}
 
-	this->esl->logMessage("all operations on initdata finished as a success");
 	return cudaSuccess;
 }
 
@@ -89,14 +86,6 @@ vtkImageData* CalcDensCalculateDensity::runComputation(){
 	originalGridx = gridSize.x;
 	gridSize = this->limitThreads(10000,gridSize);
 
-	sprintf(buffer, "Density matrix has %d elems and is %d bytes long",calcData.densityLength, sizeof(float)*calcData.densityLength);
-	this->esl->logMessage(buffer);
-
-	sprintf(buffer, "Molecule has %d n basis functions",this->mol->nBasisFunctions);
-	this->esl->logMessage(buffer);
-
-	sprintf(buffer, "Original gridX: %d new gridX: %d",originalGridx, gridSize.x);
-	this->esl->logMessage(buffer);
 	
 	for(offsetx=0; offsetx<originalGridx; offsetx += gridSize.x){
 		calculateDensity<<<gridSize, blockSize>>>(this->deviceMolecule,this->calcData,this->deviceOrbital,this->deviceDensityMatrix, this->deviceResults,offsetx);
@@ -144,7 +133,6 @@ vtkImageData* CalcDensCalculateDensity::runComputation(){
 }
 
 void CalcDensCalculateDensity::cleanupData(){
-	this->esl->logMessage("starting to clean up.");
 
 	this->deleteDeviceMoleculeData();
 	this->deleteDeviceOrbitalData();
@@ -153,7 +141,6 @@ void CalcDensCalculateDensity::cleanupData(){
 	cudaFree(deviceResults);
 	delete[] results;
 
-	this->esl->logMessage("cleanup complete.");
 }
 
 CalcDensCalculateDensity::CalcDensCalculateDensity(CalcDensDataPack *data): CalcDensCudaFunction(data){
